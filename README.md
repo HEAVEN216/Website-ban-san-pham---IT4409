@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # WebITBanhang
 
 README này mô tả nhanh cách cài đặt, chạy và cấu trúc thư mục cho dự án WebITBanhang (React client + Node/Express server).
@@ -149,3 +150,7 @@ Get-Process -Id (Get-NetTCPConnection -LocalPort 3000).OwningProcess
 - Tạo file `server/package.json` giả lập nếu bạn muốn chạy backend ngay.
 
 Nếu bạn muốn, tôi sẽ áp nội dung README này vào file `README.md` (tôi đã làm) và có thể tiếp tục tạo các `package.json` mẫu hoặc script — bạn muốn tôi làm bước tiếp theo nào?
+=======
+# Website-ban-san-pham---IT4409
+Hệ thống thương mại điện tử mini: đăng sản phẩm, giỏ hàng, thanh toán.
+>>>>>>> 4cd2a2e0274ba1224cc45bf9ebe5b4de67e77528
