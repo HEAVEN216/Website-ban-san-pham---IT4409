@@ -1,0 +1,1 @@
+File khởi tạo ứng dụng Express, kết nối Database, định nghĩa Middlewares chung (CORS, body-parser), và sử dụng tất cả các Routes đã định nghĩa.

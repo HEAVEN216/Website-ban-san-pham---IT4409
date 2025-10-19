@@ -1,0 +1,7 @@
+Logic xử lý chính cho mỗi Route. Nhận yêu cầu từ Route, xử lý dữ liệu, tương tác với models, và gửi phản hồi.
+- authcontroller
+- productcontroller
+- categorycontroller
+- usercontroller
+- admincontroller
+- reviewcontroller
