@@ -1,0 +1,9 @@
+Chứa các trang chính của website như :
+- HomePage.js (Trang chủ),
+- ProductDetail.js (Chi tiết SP)
+- CartPage.js (Giỏ hàng), 
+- CheckoutPage.js (Thanh toán),
+- LoginPage.js,
+- RegisterPage.js,
+- UserProfile.js,
+- AdminDashboard.js(Trang cho quản lý)
