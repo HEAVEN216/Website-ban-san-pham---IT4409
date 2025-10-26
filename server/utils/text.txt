@@ -1,0 +1,1 @@
+Các hàm tiện ích, có thể dùng lại như: gửi email, mã hóa mật khẩu, tạo token JWT..
