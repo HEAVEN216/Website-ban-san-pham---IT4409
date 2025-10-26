@@ -1,0 +1,53 @@
+# Dependencies
+node_modules/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Environment files
+.env
+.env.*
+server/.env
+client/.env
+!.env.example
+!server/.env.example
+!client/.env.example
+
+# Build outputs
+build/
+dist/
+client/build/
+client/dist/
+server/dist/
+.next/
+.nuxt/
+out/
+
+# Caches
+.cache/
+.vite/
+.parcel-cache/
+coverage/
+.eslintcache
+*.tsbuildinfo
+
+# IDE/OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Temp
+.tmp/
+.temp/
+.turbo/
+
+# Uploads (local storage)
+uploads/
+server/uploads/
