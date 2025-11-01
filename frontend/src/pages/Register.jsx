@@ -77,5 +77,3 @@ function Register({ onToggle }) {
 }
 
 export default Register;
-
-

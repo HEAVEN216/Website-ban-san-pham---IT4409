@@ -1,3 +1,0 @@
-Cấu hình ứng dụng: kết nối Database, cổng (port), khóa bí mật (secret keys), v.v.
-- db.config.js
-- server.config.js
