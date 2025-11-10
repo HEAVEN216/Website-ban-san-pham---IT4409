@@ -2,11 +2,11 @@ import React, { useState } from "react";
 import { Pencil, Trash2, Search } from "lucide-react";
 
 const initialData = [
-  { id: 1, name: "Tai nghe", description: "Tai nghe không dây, có dây" },
-  { id: 2, name: "Chuột", description: "Chuột chơi game & văn phòng" },
+  { id: 1, username: "admin001", password: "1225487" , adminrealname: "Nguyen Van A" , civilcode: "123456789"  },
+  { id: 2, username: "admin002", password: "1422563" , adminrealname: "Tran Thi B" , civilcode: "987654321"  },
 ];
 
-const Categories = () => {
+const Admins = () => {
   const [categories, setCategories] = useState(initialData);
   const [search, setSearch] = useState("");
   const [form, setForm] = useState({ id: null, name: "", description: "" });
@@ -17,7 +17,7 @@ const Categories = () => {
 
   // Filtering
   const filtered = categories.filter((c) =>
-    c.name.toLowerCase().includes(search.toLowerCase())
+    c.username.toLowerCase().includes(search.toLowerCase())
   );
 
   // Submit (create / update)
@@ -62,9 +62,9 @@ const Categories = () => {
     <div className="p-8 md:p-10 lg:p-12">
       {/* Header */}
       <header className="mb-6">
-        <h1 className="text-3xl font-semibold text-gray-800 leading-tight">Quản lý Danh mục</h1>
+        <h1 className="text-3xl font-semibold text-gray-800 leading-tight">Quản lý tài khoản admin</h1>
         <p className="mt-2 text-base text-gray-600 leading-7">
-          Thêm, chỉnh sửa hoặc xóa danh mục sản phẩm.
+          Theo dõi , thêm hoặc xóa tài khoản quản trị viên để quản lý hệ thống.
         </p>
       </header>
 
@@ -75,30 +75,55 @@ const Categories = () => {
             onSubmit={handleSubmit}
             className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 items-end"
           >
+            {/* Admin usercode */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Tên danh mục</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Admin Usercode</label>
               <input
                 type="text"
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
-                placeholder="Ví dụ: Tai nghe"
+                placeholder="Ví dụ: admin001"
                 className="w-full bg-white border border-gray-200 text-black rounded-md px-4 py-3 placeholder:text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
-                aria-label="Tên danh mục"
+                aria-label="Admin Usercode"
               />
             </div>
-
+            {/* Password */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Mô tả</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
               <input
                 type="text"
                 value={form.description}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
-                placeholder="Mô tả ngắn (tùy chọn)"
+                placeholder="Set password here"
                 className="w-full bg-white border border-gray-200 text-black rounded-md px-4 py-3 placeholder:text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
-                aria-label="Mô tả danh mục"
+                aria-label="Password"
               />
             </div>
-
+            {/* Admin realname */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Admin Real Name</label>
+              <input
+                type="text"
+                value={form.description}
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                placeholder="Enter real name here"
+                className="w-full bg-white border border-gray-200 text-black rounded-md px-4 py-3 placeholder:text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+                aria-label="Real Name"
+              />
+            </div>
+            {/* Admin civilcode*/}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Admin civilcode</label>
+              <input
+                type="text"
+                value={form.description}
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                placeholder="Enter admin civilcode here"
+                className="w-full bg-white border border-gray-200 text-black rounded-md px-4 py-3 placeholder:text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+                aria-label="Civilcode"
+              />
+            </div>
+            {/* Admin usercode */}
             <div className="flex items-center md:justify-end">
               <div className="w-full">
                 <button
@@ -129,30 +154,10 @@ const Categories = () => {
           {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
         </div>
       </section>
-
-      {/* Search & meta */}
-      <section className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="relative w-full md:w-1/2">
-          <label htmlFor="search" className="sr-only">Tìm kiếm</label>
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search size={16} className="text-gray-400" />
-          </div>
-          <input
-            id="search"
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Tìm kiếm danh mục..."
-            className="w-full pl-10 bg-white border border-gray-200 rounded-md px-4 py-3 placeholder:text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
-            aria-label="Tìm kiếm danh mục"
-          />
-        </div>
-
-        <div className="text-sm text-gray-600">
-          <span className="font-medium text-gray-800">{filtered.length}</span>{" "}
-          danh mục (tổng {categories.length})
-        </div>
-      </section>
+      
+      <header className="mb-6">
+        <h1 className="text-3xl font-semibold text-gray-800 leading-tight">Danh sách tài khoản</h1>
+      </header>
 
       {/* Table card */}
       <section>
@@ -161,8 +166,10 @@ const Categories = () => {
             <thead className="bg-gray-50">
               <tr>
                 <th className="text-left px-6 py-3 text-sm font-semibold text-gray-700">ID</th>
-                <th className="text-left px-6 py-3 text-sm font-semibold text-gray-700">Tên</th>
-                <th className="text-left px-6 py-3 text-sm font-semibold text-gray-700">Mô tả</th>
+                <th className="text-left px-6 py-3 text-sm font-semibold text-gray-700">AdminCode</th>
+                <th className="text-left px-6 py-3 text-sm font-semibold text-gray-700">Password</th>
+                <th className="text-left px-6 py-3 text-sm font-semibold text-gray-700">AdminName</th>
+                <th className="text-left px-6 py-3 text-sm font-semibold text-gray-700">Civilcode</th>
                 <th className="text-center px-6 py-3 text-sm font-semibold text-gray-700">Hành động</th>
               </tr>
             </thead>
@@ -178,8 +185,10 @@ const Categories = () => {
                 filtered.map((cat) => (
                   <tr key={cat.id} className="hover:bg-gray-50 focus-within:bg-gray-50">
                     <td className="px-6 py-4 align-middle text-sm text-gray-600">{cat.id}</td>
-                    <td className="px-6 py-4 align-middle text-sm text-gray-800 font-medium">{cat.name}</td>
-                    <td className="px-6 py-4 align-middle text-sm text-gray-600">{cat.description}</td>
+                    <td className="px-6 py-4 align-middle text-sm text-gray-800 font-medium">{cat.username}</td>
+                    <td className="px-6 py-4 align-middle text-sm text-gray-800 font-medium">{cat.password}</td>
+                    <td className="px-6 py-4 align-middle text-sm text-gray-800 font-medium">{cat.adminrealname}</td>
+                    <td className="px-6 py-4 align-middle text-sm text-gray-800 font-medium">{cat.civilcode}</td>
                     <td className="px-6 py-4 align-middle text-sm text-center">
                       <div className="inline-flex gap-3 items-center">
                         <button
@@ -212,6 +221,4 @@ const Categories = () => {
   );
 };
 
-export default Categories;
-
-
+export default Admins;
