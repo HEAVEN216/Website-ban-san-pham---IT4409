@@ -4,7 +4,7 @@
 // Contract:
 // validate(code, { userId, subtotal }) -> { valid, code, discountAmount, message }
 
-async function validate(code, { userId, subtotal }) {
+async function validate(code, { userId: _userId, subtotal }) {
   if (!code) {
     return { valid: false, code: null, discountAmount: 0, message: 'No coupon' };
   }

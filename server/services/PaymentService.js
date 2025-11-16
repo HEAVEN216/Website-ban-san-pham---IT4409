@@ -1,7 +1,7 @@
 'use strict';
 
 const { Payment } = require('../models');
-const { PAYMENT_METHOD, PAYMENT_STATUS } = require('../constants/payments');
+const { PAYMENT_STATUS } = require('../constants/payments');
 const { ORDER_STATUS } = require('../constants/orders');
 const ApiError = require('../utils/ApiError');
 const PaymentGateway = require('./PaymentGatewayMock');

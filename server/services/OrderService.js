@@ -13,8 +13,8 @@ async function createFromCart(userId, { shippingAddress, paymentMethod, couponCo
   if (!paymentMethod) throw ApiError.badRequest('Missing paymentMethod');
 
   const session = await mongoose.startSession();
-  session.startTransaction();
   try {
+    session.startTransaction();
     const cart = await Cart.findOne({ user: userId }).populate('items.product').session(session);
     if (!cart || cart.items.length === 0) throw ApiError.badRequest('Cart is empty');
 
@@ -92,13 +92,13 @@ async function createFromCart(userId, { shippingAddress, paymentMethod, couponCo
     await cart.save({ session });
 
     await session.commitTransaction();
-    session.endSession();
 
     return { order: createdOrder };
   } catch (err) {
     await session.abortTransaction();
-    session.endSession();
     throw err;
+  } finally {
+    session.endSession();
   }
 }
 
