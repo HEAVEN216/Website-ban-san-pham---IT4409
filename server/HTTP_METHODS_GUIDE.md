@@ -259,3 +259,11 @@ Trong Postman, khi test API đăng ký:
 
 Không dùng GET cho các thao tác tạo dữ liệu! 🚫
 
+
+
+
+
+
+
+
+

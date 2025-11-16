@@ -115,10 +115,31 @@ const queryProductsValidator = [
     .optional()
     .isMongoId()
     .withMessage('Invalid category ID'),
+  query('q')
+    .optional()
+    .trim()
+    .isLength({ min: 1, max: 200 })
+    .withMessage('Search query must be between 1 and 200 characters'),
   query('sort')
     .optional()
     .isIn(['price', '-price', 'createdAt', '-createdAt', 'averageRating', '-averageRating', 'name', '-name'])
     .withMessage('Invalid sort field')
+];
+
+const uploadImageValidator = [
+  param('id')
+    .isMongoId()
+    .withMessage('Invalid product ID')
+];
+
+const deleteImageValidator = [
+  param('id')
+    .isMongoId()
+    .withMessage('Invalid product ID'),
+  param('publicId')
+    .trim()
+    .notEmpty()
+    .withMessage('Public ID or image URL is required')
 ];
 
 module.exports = {
@@ -126,5 +147,7 @@ module.exports = {
   updateProductValidator,
   getProductValidator,
   deleteProductValidator,
-  queryProductsValidator
+  queryProductsValidator,
+  uploadImageValidator,
+  deleteImageValidator
 };

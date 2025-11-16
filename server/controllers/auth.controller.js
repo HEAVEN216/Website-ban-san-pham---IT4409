@@ -1,9 +1,56 @@
 'use strict';
 
+const jwt = require('jsonwebtoken');
 const { User } = require('../models');
 const ApiError = require('../utils/ApiError');
 const ApiResponse = require('../utils/ApiResponse');
 const catchAsync = require('../utils/catchAsync');
+
+const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+const getCookieOptions = () => ({
+  expires: new Date(Date.now() + COOKIE_MAX_AGE),
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'strict'
+});
+
+const clearCookieOptions = () => ({
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'strict'
+});
+
+const attachAuthCookies = (res, accessToken, refreshToken) => {
+  const cookieOptions = getCookieOptions();
+  res.cookie('accessToken', accessToken, cookieOptions);
+  res.cookie('refreshToken', refreshToken, cookieOptions);
+};
+
+const clearAuthCookies = (res) => {
+  const options = clearCookieOptions();
+  res.clearCookie('accessToken', options);
+  res.clearCookie('refreshToken', options);
+};
+
+const verifyToken = (token, secret, expiredMessage = 'Token expired', invalidMessage = 'Invalid token') => {
+  try {
+    return jwt.verify(token, secret);
+  } catch (error) {
+    if (error.name === 'TokenExpiredError') {
+      throw ApiError.unauthorized(expiredMessage);
+    }
+    throw ApiError.unauthorized(invalidMessage);
+  }
+};
+
+const buildAuthResponse = (user, accessToken, refreshToken) => ({
+  user: user.toJSON(),
+  tokens: {
+    accessToken,
+    refreshToken
+  }
+});
 
 /**
  * Đăng ký tài khoản mới
@@ -12,13 +59,11 @@ const catchAsync = require('../utils/catchAsync');
 const register = catchAsync(async (req, res, next) => {
   const { email, password, fullName, phone, username } = req.body;
 
-  // Kiểm tra xem email đã tồn tại chưa
   const existingUser = await User.findOne({ email });
   if (existingUser) {
     throw ApiError.conflict('Email already exists');
   }
 
-  // Kiểm tra username nếu được cung cấp
   if (username) {
     const existingUsername = await User.findOne({ username });
     if (existingUsername) {
@@ -26,7 +71,6 @@ const register = catchAsync(async (req, res, next) => {
     }
   }
 
-  // Tạo user mới
   const user = await User.create({
     email,
     password,
@@ -35,41 +79,18 @@ const register = catchAsync(async (req, res, next) => {
     username
   });
 
-  // Tạo tokens
   const accessToken = user.generateAccessToken();
   const refreshToken = user.generateRefreshToken();
 
-  // Lưu refresh token vào database
   user.refreshToken = refreshToken;
-  await user.save({ validateBeforeSave: false });
-
-  // Cập nhật lastLogin
   user.lastLogin = new Date();
   await user.save({ validateBeforeSave: false });
 
-  // Gửi token qua cookie (tùy chọn)
-  const cookieOptions = {
-    expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict'
-  };
-
-  res.cookie('accessToken', accessToken, cookieOptions);
-  res.cookie('refreshToken', refreshToken, cookieOptions);
-
-  // Trả về response (không bao gồm password)
-  const userData = user.toJSON();
+  attachAuthCookies(res, accessToken, refreshToken);
 
   res.status(201).json(
     ApiResponse.created(
-      {
-        user: userData,
-        tokens: {
-          accessToken,
-          refreshToken
-        }
-      },
+      buildAuthResponse(user, accessToken, refreshToken),
       'Registration successful'
     )
   );
@@ -82,57 +103,33 @@ const register = catchAsync(async (req, res, next) => {
 const login = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
 
-  // Tìm user và lấy password (vì password có select: false)
   const user = await User.findOne({ email }).select('+password');
 
-  // Kiểm tra user có tồn tại không
   if (!user) {
     throw ApiError.unauthorized('Invalid email or password');
   }
 
-  // Kiểm tra tài khoản có bị xóa không
   if (user.isDeleted) {
     throw ApiError.unauthorized('Account has been deleted');
   }
 
-  // Kiểm tra password
   const isPasswordValid = await user.comparePassword(password);
   if (!isPasswordValid) {
     throw ApiError.unauthorized('Invalid email or password');
   }
 
-  // Tạo tokens
   const accessToken = user.generateAccessToken();
   const refreshToken = user.generateRefreshToken();
 
-  // Lưu refresh token vào database
   user.refreshToken = refreshToken;
   user.lastLogin = new Date();
   await user.save({ validateBeforeSave: false });
 
-  // Gửi token qua cookie (tùy chọn)
-  const cookieOptions = {
-    expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict'
-  };
-
-  res.cookie('accessToken', accessToken, cookieOptions);
-  res.cookie('refreshToken', refreshToken, cookieOptions);
-
-  // Trả về response (không bao gồm password)
-  const userData = user.toJSON();
+  attachAuthCookies(res, accessToken, refreshToken);
 
   res.status(200).json(
     ApiResponse.success(
-      {
-        user: userData,
-        tokens: {
-          accessToken,
-          refreshToken
-        }
-      },
+      buildAuthResponse(user, accessToken, refreshToken),
       'Login successful'
     )
   );
@@ -143,23 +140,180 @@ const login = catchAsync(async (req, res, next) => {
  * POST /api/auth/logout
  */
 const logout = catchAsync(async (req, res, next) => {
-  const { refreshToken } = req.body;
+  const incomingRefreshToken = req.body.refreshToken || (req.cookies && req.cookies.refreshToken);
 
-  if (refreshToken) {
-    // Xóa refresh token từ database
-    const user = await User.findOne({ refreshToken }).select('+refreshToken');
+  if (incomingRefreshToken) {
+    const user = await User.findOne({ refreshToken: incomingRefreshToken }).select('+refreshToken');
     if (user) {
       user.refreshToken = undefined;
       await user.save({ validateBeforeSave: false });
     }
   }
 
-  // Xóa cookies
-  res.clearCookie('accessToken');
-  res.clearCookie('refreshToken');
+  clearAuthCookies(res);
 
   res.status(200).json(
     ApiResponse.success(null, 'Logout successful')
+  );
+});
+
+/**
+ * Refresh access token
+ * POST /api/auth/refresh
+ */
+const refreshTokens = catchAsync(async (req, res, next) => {
+  const incomingRefreshToken = req.body.refreshToken || (req.cookies && req.cookies.refreshToken);
+
+  if (!incomingRefreshToken) {
+    throw ApiError.badRequest('Refresh token is required');
+  }
+
+  const decoded = verifyToken(
+    incomingRefreshToken,
+    process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
+    'Refresh token expired',
+    'Invalid refresh token'
+  );
+
+  const user = await User.findById(decoded.id).select('+refreshToken');
+
+  if (!user || user.refreshToken !== incomingRefreshToken) {
+    throw ApiError.unauthorized('Invalid refresh token');
+  }
+
+  if (user.isDeleted) {
+    throw ApiError.unauthorized('User account has been deleted');
+  }
+
+  const accessToken = user.generateAccessToken();
+  const refreshToken = user.generateRefreshToken();
+
+  user.refreshToken = refreshToken;
+  user.lastLogin = new Date();
+  await user.save({ validateBeforeSave: false });
+
+  attachAuthCookies(res, accessToken, refreshToken);
+
+  res.status(200).json(
+    ApiResponse.success(
+      buildAuthResponse(user, accessToken, refreshToken),
+      'Token refreshed successfully'
+    )
+  );
+});
+
+/**
+ * Quên mật khẩu
+ * POST /api/auth/forgot-password
+ */
+const forgotPassword = catchAsync(async (req, res, next) => {
+  const { email } = req.body;
+
+  const user = await User.findOne({ email });
+
+  if (!user || user.isDeleted) {
+    // Tránh lộ thông tin tài khoản
+    return res.status(200).json(
+      ApiResponse.success(null, 'If the email exists, a reset link has been sent')
+    );
+  }
+
+  const resetToken = user.generatePasswordResetToken();
+  await user.save({ validateBeforeSave: false });
+
+  const clientUrl = process.env.CLIENT_URL || process.env.APP_URL || 'http://localhost:3000';
+  const resetUrl = `${clientUrl.replace(/\/+$/, '')}/reset-password?token=${resetToken}`;
+
+  // TODO: tích hợp dịch vụ email thực tế
+  console.info(`[AUTH] Password reset link for ${user.email}: ${resetUrl}`);
+
+  res.status(200).json(
+    ApiResponse.success(
+      process.env.NODE_ENV !== 'production'
+        ? { resetUrl }
+        : null,
+      'Password reset instructions have been sent'
+    )
+  );
+});
+
+/**
+ * Đặt lại mật khẩu
+ * POST /api/auth/reset-password
+ */
+const resetPassword = catchAsync(async (req, res, next) => {
+  const { token, password } = req.body;
+
+  if (!token) {
+    throw ApiError.badRequest('Reset token is required');
+  }
+
+  verifyToken(token, process.env.JWT_SECRET, 'Reset token expired', 'Invalid reset token');
+
+  const user = await User.findOne({
+    resetPasswordToken: token,
+    resetPasswordExpire: { $gt: Date.now() }
+  }).select('+password +refreshToken');
+
+  if (!user) {
+    throw ApiError.unauthorized('Invalid or expired reset token');
+  }
+
+  user.password = password;
+  user.resetPasswordToken = undefined;
+  user.resetPasswordExpire = undefined;
+
+  const accessToken = user.generateAccessToken();
+  const refreshToken = user.generateRefreshToken();
+
+  user.refreshToken = refreshToken;
+  user.lastLogin = new Date();
+  await user.save();
+
+  attachAuthCookies(res, accessToken, refreshToken);
+
+  res.status(200).json(
+    ApiResponse.success(
+      buildAuthResponse(user, accessToken, refreshToken),
+      'Password reset successful'
+    )
+  );
+});
+
+/**
+ * Đổi mật khẩu
+ * POST /api/auth/change-password
+ */
+const changePassword = catchAsync(async (req, res, next) => {
+  const { currentPassword, newPassword } = req.body;
+
+  const user = await User.findById(req.user._id).select('+password +refreshToken');
+
+  if (!user) {
+    throw ApiError.unauthorized('User not found');
+  }
+
+  const isMatch = await user.comparePassword(currentPassword);
+  if (!isMatch) {
+    throw ApiError.unauthorized('Current password is incorrect');
+  }
+
+  user.password = newPassword;
+
+  const accessToken = user.generateAccessToken();
+  const refreshToken = user.generateRefreshToken();
+
+  user.refreshToken = refreshToken;
+  user.lastLogin = new Date();
+  await user.save();
+
+  attachAuthCookies(res, accessToken, refreshToken);
+
+  res.status(200).json(
+    ApiResponse.success(
+      buildAuthResponse(user, accessToken, refreshToken),
+      'Password changed successfully'
+    )
   );
 });
 
@@ -182,7 +336,9 @@ module.exports = {
   register,
   login,
   logout,
+  refreshTokens,
+  forgotPassword,
+  resetPassword,
+  changePassword,
   getMe
 };
-
-

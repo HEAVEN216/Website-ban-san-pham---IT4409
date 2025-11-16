@@ -8,5 +8,6 @@ module.exports = {
   Order: require('./Order.model'),
   OrderItem: require('./OrderItem.model'),
   Payment: require('./Payment.model'),
-  Review: require('./Review.model')
+  Review: require('./Review.model'),
+  Coupon: require('./Coupon.model')
 };
