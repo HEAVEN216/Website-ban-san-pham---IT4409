@@ -13,7 +13,7 @@ const Categories = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [error, setError] = useState("");
 
-  const [nextId, setNextId] = useState(3); // Important , to track next ID for new categories
+  const [nextId, setNextId] = useState(3);
 
   // Filtering
   const filtered = categories.filter((c) =>
@@ -185,19 +185,19 @@ const Categories = () => {
                         <button
                           onClick={() => handleEdit(cat)}
                           title="Chỉnh sửa"
-                          className="w-11 h-11 flex items-center justify-center rounded-full hover:bg-gray-100 transition"
+                          className="p-2 hover:bg-gray-100 rounded-full"
                           aria-label={`Chỉnh sửa ${cat.name}`}
                         >
-                          <Pencil size={20} className="text-blue-800" />
+                          <Pencil size={15} className="text-blue-800" />
                         </button>
 
                         <button
                           onClick={() => handleDelete(cat.id)}
                           title="Xóa"
-                          className="w-11 h-11 flex items-center justify-center rounded-full hover:bg-red-50 transition"
+                          className="p-2 hover:bg-gray-100 rounded-full"
                           aria-label={`Xóa ${cat.name}`}
                         >
-                          <Trash2 size={50} className="text-red-800" />
+                          <Trash2 size={15} className="text-red-800" />
                         </button>
                       </div>
                     </td>

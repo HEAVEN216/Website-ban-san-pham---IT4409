@@ -13,7 +13,7 @@ const Admins = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [error, setError] = useState("");
 
-  const [nextId, setNextId] = useState(3); // Important , to track next ID for new categories
+  const [nextId, setNextId] = useState(3); 
 
   // Filtering
   const filtered = categories.filter((c) =>

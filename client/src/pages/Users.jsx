@@ -13,59 +13,62 @@
 
 
 import React, { useState } from "react";
-import { Pencil, Trash2, Search , Eye } from "lucide-react";
+import { Trash2, Eye } from "lucide-react";
+import UserDetail from "../components/UserDetail";
 
 const initialData = [
-  { id: 1, username: "admin001", password: "1225487" , adminrealname: "Nguyen Van A" , civilcode: "123456789"  },
-  { id: 2, username: "admin002", password: "1422563" , adminrealname: "Tran Thi B" , civilcode: "987654321"  },
+  { id: 1, username: "admin001", password: "1225487", adminrealname: "Nguyen Van A", civilcode: "123456789", phone: "0901234567", address: "Hà Nội" },
+  { id: 2, username: "admin002", password: "1422563", adminrealname: "Tran Thi B", civilcode: "987654321", phone: "0939876543", address: "Hồ Chí Minh" },
 ];
 
 const Users = () => {
   const [users, setUsers] = useState(initialData);
   const [search, setSearch] = useState("");
-  // Filtering
+  const [selectedUser, setSelectedUser] = useState(null);
+
   const filtered = users.filter((c) =>
     c.username.toLowerCase().includes(search.toLowerCase())
   );
 
   const handleDelete = (id) => {
-    const cat = users.find((c) => c.id === id);
-    if (!cat) return;
-    if (window.confirm(`Xóa danh mục "${cat.name}"? Hành động không thể hoàn tác.`)) {
+    const user = users.find((c) => c.id === id);
+    if (!user) return;
+    if (window.confirm(`Xóa tài khoản "${user.username}"? Hành động không thể hoàn tác.`)) {
       setUsers((prev) => prev.filter((c) => c.id !== id));
     }
   };
 
   return (
     <div className="p-8 md:p-10 lg:p-12">
-      {/* Header */}
       <header className="mb-6">
         <h1 className="text-3xl font-semibold text-gray-800 leading-tight">Quản lý tài khoản user</h1>
         <p className="mt-2 text-base text-gray-600 leading-7">
-          Theo dõi và quản lý tài khoản user trong hệ thống.(Chức năng : tự động thêm khi user đăng ký , xóa khi cần , không có chức năng chỉnh sửa)
+          Theo dõi và quản lý tài khoản user trong hệ thống.
         </p>
       </header>
 
-      {/* Header */}
-      <header className="mb-6">
-        <h1 className="text-3xl font-semibold text-gray-800 leading-tight">Danh sách tài khoản user</h1>
-      </header>
+      {/* Input search */}
+      <div className="mb-4">
+        <input
+          type="text"
+          placeholder="Tìm kiếm user..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full border text-black border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300 text-gray-800 bg-white"
+        />
+      </div>
 
-      {/* 
-          
-      
-      */}
-
-      {/* Table card */}
       <section>
         <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="text-left px-6 py-3 text-sm font-semibold text-gray-700">ID</th>
-                <th className="text-left px-6 py-3 text-sm font-semibold text-gray-700">Username</th>
-                <th className="text-left px-6 py-3 text-sm font-semibold text-gray-700">Password</th>
-                <th className="text-center px-6 py-3 text-sm font-semibold text-gray-700">Hành động</th>
+                <th className="text-left px-6 py-3 text-sm font-semibold text-gray-700 text-center">ID</th>
+                <th className="text-left px-6 py-3 text-sm font-semibold text-gray-700 text-center">Username</th>
+                <th className="text-left px-6 py-3 text-sm font-semibold text-gray-700 text-center">Password</th>
+                <th className="text-left px-6 py-3 text-sm font-semibold text-gray-700 text-center">Ngày đăng ký</th>
+                <th className="text-left px-6 py-3 text-sm font-semibold text-gray-700 text-center">Số đơn hàng đã mua</th>
+                <th className="text-center px-6 py-3 text-sm font-semibold text-gray-700 text-center">Hành động</th>
               </tr>
             </thead>
 
@@ -73,38 +76,31 @@ const Users = () => {
               {filtered.length === 0 ? (
                 <tr>
                   <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
-                    Chưa có danh mục phù hợp. Hãy thử thay đổi từ khoá tìm kiếm hoặc thêm danh mục mới.
+                    Không tìm thấy tài khoản phù hợp.
                   </td>
                 </tr>
               ) : (
-                filtered.map((cat) => (
-                  <tr key={cat.id} className="hover:bg-gray-50 focus-within:bg-gray-50">
-                    <td className="px-6 py-4 align-middle text-sm text-gray-600">{cat.id}</td>
-                    <td className="px-6 py-4 align-middle text-sm text-gray-800 font-medium">{cat.username}</td>
-                    <td className="px-6 py-4 align-middle text-sm text-gray-800 font-medium">{cat.password}</td>
-                    <td className="px-6 py-4 align-middle text-sm text-center">
+                filtered.map((user) => (
+                  <tr key={user.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 text-sm text-gray-600 text-center">{user.id}</td>
+                    <td className="px-6 py-4 text-sm text-gray-800 font-medium text-center">{user.username}</td>
+                    <td className="px-6 py-4 text-sm text-gray-800 font-medium text-center">{user.password}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600 text-center">01/01/2024</td> {/* Note : Cần cập nhật thêm */}
+                    <td className="px-6 py-4 text-sm text-gray-600 text-center">5</td> {/* Note : Cần cập nhật thêm */}
+                    <td className="px-6 py-4 text-center">
                       <div className="inline-flex gap-3 items-center">
-                        {/* Sẽ có 2 nút ở đây :
-                           - Một nút cho phép quản trị viên xem thông tin chi tiết của người dùng,
-                             Khi nhấn vào nút này, một modal sẽ hiển thị với tất cả thông tin liên quan đến người dùng đó.
-                           - Một nút để vô hiệu hóa hoặc xóa tài khoản người dùng khỏi hệ thống.
-                         */}
                         <button
-                          onClick={() => /* Cần một hàm có chức năng truy cập vào CSDL và lấy ra các thông tin chi tiết của user, sau đó hiển thị trên một giao diện khác */ {}}
-                          title="Chỉnh sửa"
-                          className="w-11 h-11 flex items-center justify-center rounded-full hover:bg-gray-100 transition"
-                          aria-label={`Chỉnh sửa ${cat.name}`}
+                          onClick={() => setSelectedUser(user)}
+                          className="p-2 hover:bg-gray-100 rounded-full"
                         >
                           <Eye size={20} className="text-blue-800" />
                         </button>
 
                         <button
-                          onClick={() => handleDelete(cat.id)}
-                          title="Xóa"
-                          className="w-11 h-11 flex items-center justify-center rounded-full hover:bg-red-50 transition"
-                          aria-label={`Xóa ${cat.name}`}
+                          onClick={() => handleDelete(user.id)}
+                          className="p-2 hover:bg-gray-100 rounded-full"
                         >
-                          <Trash2 size={50} className="text-red-800" />
+                          <Trash2 size={20} className="text-red-800" />
                         </button>
                       </div>
                     </td>
@@ -115,8 +111,17 @@ const Users = () => {
           </table>
         </div>
       </section>
+
+      {/* Modal chi tiết user */}
+      {selectedUser && (
+        <UserDetail
+          user={selectedUser}
+          onClose={() => setSelectedUser(null)}
+        />
+      )}
     </div>
   );
 };
 
 export default Users;
+
