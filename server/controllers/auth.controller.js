@@ -8,18 +8,37 @@ const catchAsync = require('../utils/catchAsync');
 
 const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000; // 7 days
 
-const getCookieOptions = () => ({
-  expires: new Date(Date.now() + COOKIE_MAX_AGE),
-  httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: 'strict'
-});
+const resolveCookieSameSite = () => {
+  if (process.env.COOKIE_SAMESITE) {
+    return process.env.COOKIE_SAMESITE;
+  }
+  return process.env.CORS_ORIGIN ? 'none' : 'lax';
+};
 
-const clearCookieOptions = () => ({
-  httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: 'strict'
-});
+const getCookieOptions = () => {
+  const sameSite = resolveCookieSameSite();
+  const baseSecure = process.env.NODE_ENV === 'production';
+  const secure = sameSite === 'none' ? true : baseSecure;
+
+  return {
+    expires: new Date(Date.now() + COOKIE_MAX_AGE),
+    httpOnly: true,
+    secure,
+    sameSite
+  };
+};
+
+const clearCookieOptions = () => {
+  const sameSite = resolveCookieSameSite();
+  const baseSecure = process.env.NODE_ENV === 'production';
+  const secure = sameSite === 'none' ? true : baseSecure;
+
+  return {
+    httpOnly: true,
+    secure,
+    sameSite
+  };
+};
 
 const attachAuthCookies = (res, accessToken, refreshToken) => {
   const cookieOptions = getCookieOptions();

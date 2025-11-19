@@ -109,7 +109,7 @@ couponSchema.index({ isActive: 1, isDeleted: 1 });
 /**
  * Kiểm tra coupon có hợp lệ không
  */
-couponSchema.methods.isValid = function(userId = null, orderAmount = 0, productIds = []) {
+couponSchema.methods.isValid = async function(userId = null, orderAmount = 0, productIds = []) {
   const now = new Date();
 
   // Kiểm tra active và không bị xóa
@@ -151,9 +151,22 @@ couponSchema.methods.isValid = function(userId = null, orderAmount = 0, productI
     }
   }
 
-  if (this.applicableTo === 'categories' && productIds.length > 0) {
-    // Cần check category của products (sẽ implement sau nếu cần)
-    // Tạm thời bỏ qua check này vì cần query products để lấy categories
+  if (this.applicableTo === 'categories' && this.categories.length > 0 && productIds.length > 0) {
+    const Product = mongoose.model('Product');
+    const products = await Product.find({
+      _id: { $in: productIds },
+      isDeleted: false
+    }).select('category');
+
+    const couponCategoryIds = this.categories.map(cat => (cat._id ? cat._id.toString() : cat.toString()));
+    const hasEligibleProduct = products.some(product => {
+      if (!product.category) return false;
+      return couponCategoryIds.includes(product.category.toString());
+    });
+
+    if (!hasEligibleProduct) {
+      return { valid: false, message: 'Coupon is not applicable to selected products' };
+    }
   }
 
   // Kiểm tra user restrictions

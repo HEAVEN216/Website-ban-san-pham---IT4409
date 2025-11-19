@@ -186,6 +186,7 @@ const getUsers = catchAsync(async (req, res, next) => {
   
     // Build query
     const query = {};
+    let includeDeleted = false;
   
     if (role) {
       query.role = role;
@@ -193,6 +194,7 @@ const getUsers = catchAsync(async (req, res, next) => {
   
     if (isDeleted !== undefined) {
       query.isDeleted = isDeleted === 'true';
+      includeDeleted = true;
     }
   
     if (search) {
@@ -207,8 +209,12 @@ const getUsers = catchAsync(async (req, res, next) => {
   const total = await User.countDocuments(query);
 
   // Paginate
+  let baseQuery = User.find(query).select('-password -refreshToken').sort({ createdAt: -1 });
+  if (includeDeleted) {
+    baseQuery = baseQuery.setOptions({ includeDeleted: true });
+  }
   const { query: paginatedQuery, page: currentPage, limit: currentLimit } = paginate(
-    User.find(query).select('-password -refreshToken').sort({ createdAt: -1 }),
+    baseQuery,
     { page, limit }
   );
 

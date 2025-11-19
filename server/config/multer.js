@@ -1,12 +1,16 @@
 'use strict';
 
+const fs = require('fs');
 const multer = require('multer');
 const path = require('path');
 const ApiError = require('../utils/ApiError');
 
+const uploadTempDir = path.join(__dirname, '..', 'uploads', 'temp');
+fs.mkdirSync(uploadTempDir, { recursive: true });
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/temp');
+    cb(null, uploadTempDir);
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);

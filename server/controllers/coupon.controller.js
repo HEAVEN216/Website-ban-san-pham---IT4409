@@ -30,7 +30,7 @@ const validateCoupon = catchAsync(async (req, res, next) => {
   }
 
   // Validate coupon
-  const validation = coupon.isValid(userId || null, orderAmount || 0, productIds || []);
+  const validation = await coupon.isValid(userId || null, orderAmount || 0, productIds || []);
 
   if (!validation.valid) {
     return res.status(200).json(

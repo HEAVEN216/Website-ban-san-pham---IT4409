@@ -105,6 +105,14 @@ if (process.env.NODE_ENV !== 'production') {
   app.use(morgan('dev'));
 }
 
+// Debug middleware để log tất cả requests
+if (process.env.NODE_ENV !== 'production') {
+  app.use((req, res, next) => {
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`);
+    next();
+  });
+}
+
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
@@ -141,14 +149,6 @@ console.log('✓ API routes registered: /api/admin');
 
 app.use('/api/orders', orderRoutes);
 console.log('✓ API routes registered: /api/orders');
-
-// Debug middleware để log tất cả requests
-if (process.env.NODE_ENV !== 'production') {
-  app.use((req, res, next) => {
-    console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`);
-    next();
-  });
-}
 
 // Error handling
 app.use(notFound);
