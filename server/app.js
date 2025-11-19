@@ -10,7 +10,7 @@ const connectDB = require('./config/db');
 const { errorHandler, notFound } = require('./middlewares/error.middleware');
 
 // Import routes
-let authRoutes, userRoutes, categoryRoutes, productRoutes, reviewRoutes, cartRoutes, couponRoutes, uploadRoutes, adminRoutes;
+let authRoutes, userRoutes, categoryRoutes, productRoutes, reviewRoutes, cartRoutes, couponRoutes, uploadRoutes, adminRoutes, orderRoutes;
 try {
   authRoutes = require('./routes/auth.routes');
   console.log('✓ Auth routes loaded successfully');
@@ -83,6 +83,14 @@ try {
   process.exit(1);
 }
 
+try {
+  orderRoutes = require('./routes/order.routes');
+  console.log('✓ Order routes loaded successfully');
+} catch (error) {
+  console.error('✗ Error loading order routes:', error);
+  process.exit(1);
+}
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -130,6 +138,9 @@ console.log('✓ API routes registered: /api/uploads');
 
 app.use('/api/admin', adminRoutes);
 console.log('✓ API routes registered: /api/admin');
+
+app.use('/api/orders', orderRoutes);
+console.log('✓ API routes registered: /api/orders');
 
 // Debug middleware để log tất cả requests
 if (process.env.NODE_ENV !== 'production') {

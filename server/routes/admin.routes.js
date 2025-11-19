@@ -5,6 +5,8 @@ const router = express.Router();
 
 // Import với error handling
 let adminController;
+let orderController;
+let orderValidator;
 let validate;
 let protect;
 let isAdmin;
@@ -14,6 +16,22 @@ try {
   console.log('✓ Admin controller loaded');
 } catch (error) {
   console.error('✗ Error loading admin controller:', error);
+  throw error;
+}
+
+try {
+  orderController = require('../controllers/order.controller');
+  console.log('✓ Order controller (admin) loaded');
+} catch (error) {
+  console.error('✗ Error loading order controller for admin routes:', error);
+  throw error;
+}
+
+try {
+  orderValidator = require('../validators/order.validator');
+  console.log('✓ Order validators (admin) loaded');
+} catch (error) {
+  console.error('✗ Error loading order validators for admin routes:', error);
   throw error;
 }
 
@@ -39,6 +57,34 @@ router.get(
   protect,
   isAdmin,
   adminController.getStats
+);
+
+/**
+ * @route   GET /api/admin/orders
+ * @desc    Lấy danh sách đơn hàng (admin)
+ * @access  Private/Admin
+ */
+router.get(
+  '/orders',
+  protect,
+  isAdmin,
+  orderValidator.adminGetOrdersValidator,
+  validate,
+  orderController.getAdminOrders
+);
+
+/**
+ * @route   PATCH /api/admin/orders/:id/status
+ * @desc    Cập nhật trạng thái đơn hàng (admin)
+ * @access  Private/Admin
+ */
+router.patch(
+  '/orders/:id/status',
+  protect,
+  isAdmin,
+  orderValidator.updateOrderStatusValidator,
+  validate,
+  orderController.updateOrderStatus
 );
 
 module.exports = router;
