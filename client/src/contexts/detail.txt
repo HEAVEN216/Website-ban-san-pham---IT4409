@@ -1,1 +1,0 @@
-Quản lý trạng thái toàn cục (Global State) như thông tin người dùng đã đăng nhập, trạng thái giỏ hàng (nếu không dùng thư viện quản lý trạng thái)

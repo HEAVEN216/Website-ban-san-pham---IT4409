@@ -1,1 +1,0 @@
-File khởi tạo ứng dụng React và render component App.
