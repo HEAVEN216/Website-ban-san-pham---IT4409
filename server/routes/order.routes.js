@@ -4,6 +4,7 @@ const express = require('express');
 const router = express.Router();
 
 let orderController;
+let ordersController;
 let orderValidator;
 let validate;
 let protect;
@@ -13,6 +14,14 @@ try {
   console.log('✓ Order controller loaded');
 } catch (error) {
   console.error('✗ Error loading order controller:', error);
+  throw error;
+}
+
+try {
+  ordersController = require('../controllers/orders.controller');
+  console.log('✓ Orders (create/cancel) controller loaded');
+} catch (error) {
+  console.error('✗ Error loading orders controller:', error);
   throw error;
 }
 
@@ -33,6 +42,17 @@ try {
   console.error('✗ Error loading order middlewares:', error);
   throw error;
 }
+
+/**
+ * @route   POST /api/orders
+ * @desc    Tạo đơn hàng mới từ giỏ hàng hiện tại
+ * @access  Private
+ */
+router.post(
+  '/',
+  protect,
+  ordersController.createOrder
+);
 
 /**
  * @route   GET /api/orders
@@ -58,6 +78,17 @@ router.get(
   orderValidator.getOrderByIdValidator,
   validate,
   orderController.getOrderById
+);
+
+/**
+ * @route   PATCH /api/orders/:id/cancel
+ * @desc    Người dùng huỷ đơn của chính mình
+ * @access  Private
+ */
+router.patch(
+  '/:id/cancel',
+  protect,
+  ordersController.cancelOrder
 );
 
 module.exports = router;

@@ -55,7 +55,7 @@ reviewSchema.statics.checkVerifiedPurchase = async function(userId, productId) {
   
   const orders = await Order.find({
     user: userId,
-    orderStatus: 'delivered',
+    orderStatus: 'completed',
     isDeleted: false
   }).select('_id');
   

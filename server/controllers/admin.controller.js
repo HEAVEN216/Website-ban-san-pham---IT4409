@@ -64,10 +64,8 @@ const getStats = catchAsync(async (req, res, next) => {
 
   const orderStatusCounts = {
     pending: 0,
-    confirmed: 0,
     processing: 0,
-    shipped: 0,
-    delivered: 0,
+    completed: 0,
     cancelled: 0
   };
 

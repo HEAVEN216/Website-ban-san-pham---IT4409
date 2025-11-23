@@ -4,7 +4,7 @@ const { Payment } = require('../models');
 const { PAYMENT_STATUS } = require('../constants/payments');
 const { ORDER_STATUS } = require('../constants/orders');
 const ApiError = require('../utils/ApiError');
-const PaymentGateway = require('./PaymentGatewayMock');
+const PaymentGateway = require('./PaymentGateway');
 const Order = require('../models/Order.model');
 
 async function createIntentForOrder({ orderId, method }) {
@@ -40,7 +40,7 @@ async function createIntentForOrder({ orderId, method }) {
 }
 
 async function handleReturn(provider, query) {
-  const result = await PaymentGateway.verifyReturn(query);
+  const result = await PaymentGateway.verifyReturn(provider, query);
   const payment = await Payment.findOne({ transactionCode: result.transactionCode }).populate('order');
   if (!payment) return { success: false };
 
@@ -52,7 +52,7 @@ async function handleReturn(provider, query) {
     if (payment.order) {
       await Order.findByIdAndUpdate(payment.order._id, {
         paymentStatus: 'paid',
-        orderStatus: payment.order.orderStatus === ORDER_STATUS.PENDING ? ORDER_STATUS.CONFIRMED : payment.order.orderStatus
+        orderStatus: payment.order.orderStatus === ORDER_STATUS.PENDING ? ORDER_STATUS.PROCESSING : payment.order.orderStatus
       });
     }
   }
@@ -60,7 +60,7 @@ async function handleReturn(provider, query) {
 }
 
 async function handleWebhook(provider, payload) {
-  const result = await PaymentGateway.verifyWebhook(payload);
+  const result = await PaymentGateway.verifyWebhook(provider, payload);
   const payment = await Payment.findOne({ transactionCode: result.transactionCode }).populate('order');
   if (!payment) return { ok: true };
 
@@ -72,7 +72,7 @@ async function handleWebhook(provider, payload) {
     if (payment.order) {
       await Order.findByIdAndUpdate(payment.order._id, {
         paymentStatus: 'paid',
-        orderStatus: payment.order.orderStatus === ORDER_STATUS.PENDING ? ORDER_STATUS.CONFIRMED : payment.order.orderStatus
+        orderStatus: payment.order.orderStatus === ORDER_STATUS.PENDING ? ORDER_STATUS.PROCESSING : payment.order.orderStatus
       });
     }
   } else if (!result.success) {

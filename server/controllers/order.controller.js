@@ -6,8 +6,8 @@ const ApiResponse = require('../utils/ApiResponse');
 const catchAsync = require('../utils/catchAsync');
 const { paginate, getPaginationMeta } = require('../utils/pagination');
 
-const ORDER_STATUSES = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
-const ADMIN_UPDATABLE_STATUSES = ['confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
+const ORDER_STATUSES = ['pending', 'processing', 'completed', 'cancelled'];
+const ADMIN_UPDATABLE_STATUSES = ['processing', 'completed', 'cancelled'];
 
 const buildOrderItemsMap = async (orderIds) => {
   if (!orderIds || orderIds.length === 0) {
@@ -193,7 +193,7 @@ const updateOrderStatus = catchAsync(async (req, res) => {
 
   order.orderStatus = normalizedStatus;
 
-  if (normalizedStatus === 'delivered') {
+  if (normalizedStatus === 'completed') {
     order.deliveredAt = new Date();
     order.cancelledAt = undefined;
     order.cancellationReason = undefined;

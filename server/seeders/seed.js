@@ -2,8 +2,9 @@
 
 require('dotenv').config();
 const mongoose = require('mongoose');
+const slugify = require('slugify');
 const connectDB = require('../config/db');
-const { User, Category, Product } = require('../models');
+const { User, Category, Product, Coupon } = require('../models');
 
 const seedUsers = async () => {
   const users = [
@@ -113,8 +114,64 @@ const seedProducts = async (categories) => {
     }
   ];
 
-  await Product.insertMany(products);
+  const productsWithSlug = products.map(p => ({
+    ...p,
+    slug: slugify(p.name, { lower: true, strict: true })
+  }));
+
+  await Product.insertMany(productsWithSlug);
   console.log('✓ Products seeded');
+};
+
+const seedCoupons = async () => {
+  const now = new Date();
+  const oneDayMs = 24 * 60 * 60 * 1000;
+  const startDate = new Date(now.getTime() - oneDayMs); // started yesterday
+  const endDate = new Date(now.getTime() + 30 * oneDayMs); // valid for 30 days
+
+  const coupons = [
+    {
+      code: 'SALE10',
+      name: 'Giảm 10% tối đa 100K',
+      description: 'Mã giảm giá 10% cho toàn bộ đơn hàng, tối đa 100.000đ',
+      discountType: 'percentage',
+      discountValue: 10,
+      minimumOrderAmount: 0,
+      maximumDiscountAmount: 100000,
+      startDate,
+      endDate,
+      usageLimit: null,
+      usageLimitPerUser: 5,
+      applicableTo: 'all',
+      categories: [],
+      products: [],
+      applicableToUsers: 'all',
+      specificUsers: [],
+      isActive: true
+    },
+    {
+      code: 'FREESHIP',
+      name: 'Miễn phí vận chuyển',
+      description: 'Mã miễn phí vận chuyển cho đơn hàng từ 500.000đ',
+      discountType: 'fixed',
+      discountValue: 0,
+      minimumOrderAmount: 500000,
+      maximumDiscountAmount: null,
+      startDate,
+      endDate,
+      usageLimit: null,
+      usageLimitPerUser: 5,
+      applicableTo: 'all',
+      categories: [],
+      products: [],
+      applicableToUsers: 'all',
+      specificUsers: [],
+      isActive: true
+    }
+  ];
+
+  await Coupon.insertMany(coupons);
+  console.log('✓ Coupons seeded');
 };
 
 const seedAll = async () => {
@@ -125,11 +182,13 @@ const seedAll = async () => {
     await User.deleteMany({});
     await Category.deleteMany({});
     await Product.deleteMany({});
+    await Coupon.deleteMany({});
     
     console.log('Seeding data...');
     await seedUsers();
     const categories = await seedCategories();
     await seedProducts(categories);
+    await seedCoupons();
     
     console.log('✓ Database seeded successfully!');
     process.exit(0);
@@ -147,6 +206,7 @@ const clearAll = async () => {
     await User.deleteMany({});
     await Category.deleteMany({});
     await Product.deleteMany({});
+    await Coupon.deleteMany({});
     
     console.log('✓ Database cleared successfully!');
     process.exit(0);

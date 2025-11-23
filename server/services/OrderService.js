@@ -61,8 +61,8 @@ async function createFromCart(userId, { shippingAddress, paymentMethod, couponCo
       user: userId,
       shippingAddress,
       paymentMethod: isCOD ? PAYMENT_METHOD.COD : paymentMethod,
-      paymentStatus: isCOD ? 'pending' : 'pending',
-      orderStatus: isCOD ? ORDER_STATUS.CONFIRMED : ORDER_STATUS.PENDING,
+      paymentStatus: 'pending',
+      orderStatus: isCOD ? ORDER_STATUS.PROCESSING : ORDER_STATUS.PENDING,
       subtotal,
       shippingFee,
       taxAmount,
@@ -106,7 +106,7 @@ async function cancelOrder(userId, orderId, reason = '') {
   const order = await Order.findOne({ _id: orderId, user: userId });
   if (!order) throw ApiError.notFound('Order not found');
 
-  if ([ORDER_STATUS.SHIPPED, ORDER_STATUS.DELIVERED, ORDER_STATUS.CANCELLED].includes(order.orderStatus)) {
+  if ([ORDER_STATUS.COMPLETED, ORDER_STATUS.CANCELLED].includes(order.orderStatus)) {
     throw ApiError.badRequest('Order cannot be cancelled');
   }
 

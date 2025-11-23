@@ -10,7 +10,7 @@ const connectDB = require('./config/db');
 const { errorHandler, notFound } = require('./middlewares/error.middleware');
 
 // Import routes
-let authRoutes, userRoutes, categoryRoutes, productRoutes, reviewRoutes, cartRoutes, couponRoutes, uploadRoutes, adminRoutes, orderRoutes;
+let authRoutes, userRoutes, categoryRoutes, productRoutes, reviewRoutes, cartRoutes, couponRoutes, uploadRoutes, adminRoutes, orderRoutes, paymentsRoutes;
 try {
     authRoutes = require('./routes/auth.routes');
     console.log('✓ Auth routes loaded successfully');
@@ -91,6 +91,14 @@ try {
     process.exit(1);
 }
 
+try {
+    paymentsRoutes = require('./routes/payments.routes');
+    console.log('✓ Payments routes loaded successfully');
+} catch (error) {
+    console.error('✗ Error loading payments routes:', error);
+    process.exit(1);
+}
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -149,6 +157,9 @@ console.log('✓ API routes registered: /api/admin');
 
 app.use('/api/orders', orderRoutes);
 console.log('✓ API routes registered: /api/orders');
+
+app.use('/api/payments', paymentsRoutes);
+console.log('✓ API routes registered: /api/payments');
 
 // Error handling
 app.use(notFound);
