@@ -7,7 +7,7 @@ import AccountPage from "./AccountPage";
 import ProductDetailPage from "./ProductDetailPage";
 import ProductListPage from "./ProductListPage";
 import products from "./products";
-
+import CheckoutPage from "./CheckoutPage";
 
 // --------------------- DỮ LIỆU 10 DANH MỤC ---------------------
 const allProducts = {
@@ -88,6 +88,7 @@ export default function App() {
         <Route path="/products/:category" element={<CategoryRouteWrapper />} />
         <Route path="/product/:id" element={<ProductDetailPage products={products} />}
         />
+        <Route path="/checkout" element={<CheckoutPage />} />
       </Routes>
     </Router>
   );

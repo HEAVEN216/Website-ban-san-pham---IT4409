@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import "./CartPage.css";
+import { useNavigate } from "react-router-dom";
 
 export default function CartPage() {
   const [cart, setCart] = useState([]);
+  const navigate = useNavigate();
 
   const toNumber = (str) => Number(str.replace(/,/g, ""));
 
@@ -47,6 +49,18 @@ export default function CartPage() {
     0
   );
 
+  // =============================
+  //  HANDLE THANH TOÁN
+  // =============================
+  const handleCheckout = () => {
+    if (cart.length === 0) {
+      alert("Giỏ hàng trống! Không thể thanh toán.");
+      return;
+    }
+
+    navigate("/checkout");
+  };
+
   return (
     <div className="cart-container">
       <div className="cart-content">
@@ -70,25 +84,30 @@ export default function CartPage() {
               {cart.map((item) => (
                 <tr key={item.id}>
                   <td className="product-name">{item.name}</td>
+
                   <td className="quantity-box">
-                    <button className="qty-btn" onClick={() => decreaseQty(item.id)}>-</button>
+                    <button className="qty-btn" onClick={() => decreaseQty(item.id)}>
+                      -
+                    </button>
                     <span className="qty-number">{item.quantity}</span>
-                    <button className="qty-btn" onClick={() => increaseQty(item.id)}>+</button>
+                    <button className="qty-btn" onClick={() => increaseQty(item.id)}>
+                      +
+                    </button>
                   </td>
+
                   <td className="price">
                     {toNumber(item.price).toLocaleString()}₫
                   </td>
+
                   <td className="subtotal">
                     {(toNumber(item.price) * item.quantity).toLocaleString()}₫
                   </td>
 
-                  {/* XÓA */}
                   <td>
                     <button className="remove-btn" onClick={() => removeItem(item.id)}>
                       Xóa
                     </button>
                   </td>
-
                 </tr>
               ))}
             </tbody>
@@ -100,7 +119,10 @@ export default function CartPage() {
             Tổng cộng: <span>{totalPrice.toLocaleString()}₫</span>
           </p>
 
-          <button className="checkout-btn">Thanh toán</button>
+          {/* NÚT THANH TOÁN */}
+          <button className="checkout-btn" onClick={handleCheckout}>
+            Thanh toán
+          </button>
         </div>
       </div>
     </div>
