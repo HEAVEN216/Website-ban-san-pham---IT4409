@@ -1,5 +1,0 @@
-Thư mục này chứa các thành phần giao diện nhỏ , có thể tái sử dụng trong toàn bộ ứng dụng React.
-- Navbar.js
-- ProductCard.js
-- Footer.js
-- ReviewForm.js ....
