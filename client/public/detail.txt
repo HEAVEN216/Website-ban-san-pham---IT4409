@@ -1,1 +1,0 @@
-Thư mục này chứa các tài nguyên công khai cho Website như : HTML , hình ảnh , favicon hay các tệp JavaScript không được biên dịch.

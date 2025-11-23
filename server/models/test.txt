@@ -1,6 +1,0 @@
-Định nghĩa cấu trúc dữ liệu (Schema) và logic tương tác với Cơ sở dữ liệu(Trong dự án này chúng ta sẽ dùng MongoDB)
-User.model.js
-Product.model.js
-Category.model.js
-Order.model.js
-Review.model.js

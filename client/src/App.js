@@ -1,1 +1,0 @@
-Component gốc của ứng dụng. Định nghĩa cấu trúc Routes chính và bao bọc các thành phần chung như Navbar và Footer.
