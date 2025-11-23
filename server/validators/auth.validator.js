@@ -62,6 +62,9 @@ const forgotPasswordValidator = [
 ];
 
 const resetPasswordValidator = [
+  body('token')
+    .notEmpty()
+    .withMessage('Reset token is required'),
   body('password')
     .isLength({ min: 6 })
     .withMessage('Password must be at least 6 characters long'),

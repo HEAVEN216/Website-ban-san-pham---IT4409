@@ -1,10 +1,11 @@
 'use strict';
 
 class ApiError extends Error {
-  constructor(statusCode, message, isOperational = true, stack = '') {
+  constructor(statusCode, message, isOperational = true, stack = '', data = null) {
     super(message);
     this.statusCode = statusCode;
     this.isOperational = isOperational;
+    this.data = data;
     if (stack) {
       this.stack = stack;
     } else {
@@ -12,8 +13,8 @@ class ApiError extends Error {
     }
   }
 
-  static badRequest(message = 'Bad Request') {
-    return new ApiError(400, message);
+  static badRequest(message = 'Bad Request', data = null) {
+    return new ApiError(400, message, true, '', data);
   }
 
   static unauthorized(message = 'Unauthorized') {

@@ -25,22 +25,30 @@ const handleJWTError = () => ApiError.unauthorized('Invalid token. Please log in
 const handleJWTExpiredError = () => ApiError.unauthorized('Your token has expired. Please log in again');
 
 const sendErrorDev = (err, res) => {
-  res.status(err.statusCode).json({
+  const response = {
     success: false,
     status: err.statusCode,
     message: err.message,
     error: err,
     stack: err.stack
-  });
+  };
+  if (err.data) {
+    response.data = err.data;
+  }
+  res.status(err.statusCode).json(response);
 };
 
 const sendErrorProd = (err, res) => {
   if (err.isOperational) {
-    res.status(err.statusCode).json({
+    const response = {
       success: false,
       status: err.statusCode,
       message: err.message
-    });
+    };
+    if (err.data) {
+      response.data = err.data;
+    }
+    res.status(err.statusCode).json(response);
   } else {
     console.error('ERROR 💥', err);
     res.status(500).json({
