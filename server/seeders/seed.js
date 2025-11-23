@@ -38,7 +38,12 @@ const seedCategories = async () => {
     { name: 'Phụ kiện', description: 'Phụ kiện công nghệ' }
   ];
 
-  const createdCategories = await Category.insertMany(categories);
+  const categoriesWithSlug = categories.map(c => ({
+    ...c,
+    slug: slugify(c.name, { lower: true, strict: true })
+  }));
+
+  const createdCategories = await Category.insertMany(categoriesWithSlug);
   console.log('✓ Categories seeded');
   return createdCategories;
 };
