@@ -201,7 +201,8 @@ const getUsers = catchAsync(async (req, res, next) => {
       query.$or = [
         { email: { $regex: search, $options: 'i' } },
         { fullName: { $regex: search, $options: 'i' } },
-        { username: { $regex: search, $options: 'i' } }
+        { username: { $regex: search, $options: 'i' } },
+        { phone: { $regex: search, $options: 'i' } }
       ];
     }
 

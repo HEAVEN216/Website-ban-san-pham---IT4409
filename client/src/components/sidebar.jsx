@@ -4,15 +4,15 @@ import { Button } from "./ui/Button";
 
 const Sidebar = () => {
   const menuItems = [
-    { name: "Dashboard", icon: <Home size={18} />, path: "/" },
-    { name: "Danh mục", icon: <Package size={18} />, path: "/categories" },
-    { name: "Sản phẩm", icon: <Package size={18} />, path: "/products" },
-    { name: "Người dùng", icon: <Users size={18} />, path: "/users" },
-    { name: "Quản trị viên", icon: <Shield size={18} />, path: "/admins" },
-    { name: "Đơn hàng", icon: <Car size={18} />, path: "/carts" },
-    { name: "Đánh giá", icon: <Star size={18} />, path: "/reviews" },
-    { name: "Thống kê doanh thu", icon: <DollarSign size={18} />, path: "/income" },
-    { name: "Cài đặt", icon: <Settings size={18} />, path: "/settings" },
+    { name: "Dashboard", icon: <Home size={18} />, path: "/admin" },
+    { name: "Danh mục", icon: <Package size={18} />, path: "/admin/categories" },
+    { name: "Sản phẩm", icon: <Package size={18} />, path: "/admin/products" },
+    { name: "Người dùng", icon: <Users size={18} />, path: "/admin/users" },
+    { name: "Quản trị viên", icon: <Shield size={18} />, path: "/admin/admins" },
+    { name: "Đơn hàng", icon: <Car size={18} />, path: "/admin/orders" },
+    { name: "Đánh giá", icon: <Star size={18} />, path: "/admin/reviews" },
+    { name: "Thống kê doanh thu", icon: <DollarSign size={18} />, path: "/admin/income" },
+    { name: "Cài đặt", icon: <Settings size={18} />, path: "/admin/settings" },
   ];
 
   return (
@@ -33,9 +33,15 @@ const Sidebar = () => {
           ))}
         </ul>
       </div>
-      <Button variant="outline" className="flex items-center gap-2 text-gray-600 hover:text-red-500">
-        <LogOut size={16} /> Đăng xuất
-      </Button>
+      <div className="pt-4 border-t border-gray-200">
+        <Link
+          to="/"
+          className="flex items-center space-x-3 p-2 rounded-xl hover:bg-gray-100 text-gray-600 transition"
+        >
+          <Home size={16} />
+          <span className="text-sm">Về trang chủ</span>
+        </Link>
+      </div>
     </div>
   );
 };
