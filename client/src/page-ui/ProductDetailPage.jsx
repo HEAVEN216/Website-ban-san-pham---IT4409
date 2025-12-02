@@ -1,10 +1,12 @@
 import React, { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";   
 import productsData from "./products";
 import "./ProductDetailPage.css";
 
 export default function ProductDetailPage() {
   const { id } = useParams();
+  const navigate = useNavigate(); 
+
   const product = productsData.find((p) => p.id === id);
 
   const [mainImage, setMainImage] = useState(product ? product.images[0] : "");
@@ -16,28 +18,51 @@ export default function ProductDetailPage() {
     return <h2 style={{ padding: "50px" }}>Sản phẩm không tồn tại!</h2>;
   }
 
-const addToCart = () => {
-  const cart = JSON.parse(localStorage.getItem("cart")) || [];
+  // =======================
+  //   THÊM VÀO GIỎ HÀNG
+  // =======================
+  const addToCart = () => {
+    const cart = JSON.parse(localStorage.getItem("cart")) || [];
 
-  const existingItem = cart.find((item) => item.id === product.id);
+    const existingItem = cart.find((item) => item.id === product.id);
 
-  if (existingItem) {
-    existingItem.quantity += 1;
-  } else {
-    cart.push({
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      quantity: 1,
+    if (existingItem) {
+      existingItem.quantity += 1;
+    } else {
+      cart.push({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        quantity: 1,
+      });
+    }
+
+    localStorage.setItem("cart", JSON.stringify(cart));
+    window.dispatchEvent(new Event("cartUpdated"));
+  };
+
+  // =======================
+  //        MUA NGAY
+  //  (KHÔNG DÍNH GIỎ HÀNG)
+  // =======================
+  const buyNow = () => {
+    navigate("/checkout", {
+      state: {
+        type: "buyNow",
+        product: {
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          quantity: 1,
+          image: product.images[0],
+        },
+      },
     });
-  }
+  };
 
-  localStorage.setItem("cart", JSON.stringify(cart));
-  window.dispatchEvent(new Event("cartUpdated"));
-};
-
-
-  // ======= TÍNH ĐIỂM TRUNG BÌNH =======
+  // =======================
+  //     TÍNH TRUNG BÌNH SAO
+  // =======================
   const totalReviews = reviews.length;
   const avgRating =
     totalReviews > 0
@@ -55,7 +80,6 @@ const addToCart = () => {
     };
   });
 
-  // ======= GỬI REVIEW =======
   const handleSubmit = () => {
     if (rating === 0) {
       alert("Bạn cần chọn số sao!");
@@ -123,7 +147,7 @@ const addToCart = () => {
           <p className="product-price">{product.price}₫</p>
 
           <div className="product-actions">
-            <button className="buy-btn">Mua ngay</button>
+            <button className="buy-btn" onClick={buyNow}>Mua ngay</button>
             <button className="cart-btn" onClick={addToCart}>Thêm vào giỏ hàng</button>
           </div>
 
@@ -134,7 +158,7 @@ const addToCart = () => {
         </div>
       </div>
 
-      {/* ======= FORM ĐÁNH GIÁ ======= */}
+      {/* Review Form */}
       <div className="review-section">
         <h3>Đánh giá sản phẩm</h3>
 
@@ -164,7 +188,6 @@ const addToCart = () => {
           </button>
         </div>
 
-        {/* DANH SÁCH REVIEW */}
         <div className="review-list">
           {reviews.length === 0 && <p>Chưa có đánh giá nào.</p>}
 
