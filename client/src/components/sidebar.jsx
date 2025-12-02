@@ -12,7 +12,6 @@ const Sidebar = () => {
     { name: "Đơn hàng", icon: <Car size={18} />, path: "/carts" },
     { name: "Đánh giá", icon: <Star size={18} />, path: "/reviews" },
     { name: "Thống kê doanh thu", icon: <DollarSign size={18} />, path: "/income" },
-    { name: "Cài đặt", icon: <Settings size={18} />, path: "/settings" },
   ];
 
   return (
