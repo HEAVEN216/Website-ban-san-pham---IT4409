@@ -8,11 +8,9 @@ const Sidebar = () => {
     { name: "Danh mục", icon: <Package size={18} />, path: "/admin/categories" },
     { name: "Sản phẩm", icon: <Package size={18} />, path: "/admin/products" },
     { name: "Người dùng", icon: <Users size={18} />, path: "/admin/users" },
-    { name: "Quản trị viên", icon: <Shield size={18} />, path: "/admin/admins" },
     { name: "Đơn hàng", icon: <Car size={18} />, path: "/admin/orders" },
     { name: "Đánh giá", icon: <Star size={18} />, path: "/admin/reviews" },
     { name: "Thống kê doanh thu", icon: <DollarSign size={18} />, path: "/admin/income" },
-    { name: "Cài đặt", icon: <Settings size={18} />, path: "/admin/settings" },
   ];
 
   return (

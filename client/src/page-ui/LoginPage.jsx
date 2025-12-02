@@ -14,8 +14,6 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const from = location.state?.from?.pathname || '/';
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -25,8 +23,13 @@ const LoginPage = () => {
       const result = await login(email, password);
       
       if (result.success) {
-        // Redirect to previous page or home
-        navigate(from, { replace: true });
+        // Redirect based on user role
+        if (result.user.role === 'admin') {
+          navigate('/admin', { replace: true });
+        } else {
+          // Customer goes to homepage
+          navigate('/', { replace: true });
+        }
       } else {
         setError(result.message || 'Đăng nhập thất bại');
       }

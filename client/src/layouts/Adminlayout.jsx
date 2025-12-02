@@ -6,9 +6,8 @@ import DashboardPage from '../pages/Dashboard';
 import Categories from '../pages/Categories';
 import Products from '../pages/Products';
 import Users from '../pages/Users';
-import Admins from '../pages/Admins';
 import Orders from '../pages/Orders';
-import Reviews from '../pages/Reviews';
+import ReviewsRefactored from '../pages/ReviewsRefactored';
 import Income from '../pages/Income';
 
 
@@ -25,9 +24,8 @@ const AdminLayout = () => {
             <Route path="categories" element={<Categories />} />
             <Route path="products" element={<Products />} />
             <Route path="users" element={<Users />} />
-            <Route path="admins" element={<Admins />} />
             <Route path="orders" element={<Orders />} />
-            <Route path="reviews" element={<Reviews />} />
+            <Route path="reviews" element={<ReviewsRefactored />} />
             <Route path="income" element={<Income />} />
             <Route path="*" element={<div className="p-8"> <h2 className="text-2xl font-semibold mb-4 text-gray-700">404 - Trang không tìm thấy</h2> <p className="text-gray-600 text-base leading-relaxed">Xin lỗi, trang bạn đang tìm kiếm không tồn tại.</p> </div>} />
           </Routes>

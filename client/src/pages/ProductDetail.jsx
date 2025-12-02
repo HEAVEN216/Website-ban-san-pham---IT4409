@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { ShoppingCart, Star, Package, Truck, Shield, ArrowLeft, Heart, Share2, Minus, Plus } from "lucide-react";
+import CustomerNavbar from "../components/CustomerNavbar";
 import { productService, cartService } from "../services";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -89,20 +90,26 @@ const ProductDetail = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-gray-50">
+        <CustomerNavbar />
+        <div className="flex items-center justify-center py-20">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
       </div>
     );
   }
 
   if (error || !product) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-4">Không tìm thấy sản phẩm</h2>
-          <Link to="/" className="text-blue-600 hover:text-blue-800">
-            Quay lại trang chủ
-          </Link>
+      <div className="min-h-screen bg-gray-50">
+        <CustomerNavbar />
+        <div className="flex items-center justify-center py-20">
+          <div className="text-center">
+            <h2 className="text-2xl font-semibold text-gray-800 mb-4">Không tìm thấy sản phẩm</h2>
+            <Link to="/" className="text-blue-600 hover:text-blue-800">
+              Quay lại trang chủ
+            </Link>
+          </div>
         </div>
       </div>
     );
@@ -110,33 +117,7 @@ const ProductDetail = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <button
-              onClick={() => navigate(-1)}
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition"
-            >
-              <ArrowLeft size={20} />
-              <span>Quay lại</span>
-            </button>
-            
-            <Link to="/" className="text-2xl font-bold text-blue-600">
-              TechStore
-            </Link>
-
-            <Link
-              to="/cart"
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-            >
-              <ShoppingCart size={20} />
-              <span className="hidden md:inline">Giỏ hàng</span>
-            </Link>
-          </div>
-        </div>
-      </header>
-
+      <CustomerNavbar />
       <div className="container mx-auto px-4 py-8">
         {/* Breadcrumb */}
         <nav className="mb-6 text-sm text-gray-600">

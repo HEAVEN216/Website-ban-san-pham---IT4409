@@ -37,16 +37,6 @@ const seedUsers = async () => {
       role: 'admin',
       isEmailVerified: true
     },
-    // Staff
-    {
-      email: 'staff@it4409.com',
-      password: 'staff123',
-      fullName: 'Lê Văn Nhân Viên',
-      username: 'staff',
-      phone: '0123456787',
-      role: 'staff',
-      isEmailVerified: true
-    },
     // Customers
     {
       email: 'customer1@it4409.com',

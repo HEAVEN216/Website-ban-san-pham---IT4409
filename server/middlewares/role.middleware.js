@@ -17,6 +17,5 @@ const restrictTo = (...roles) => {
 };
 
 const isAdmin = restrictTo('admin');
-const isStaffOrAdmin = restrictTo('staff', 'admin');
 
-module.exports = { restrictTo, isAdmin, isStaffOrAdmin };
+module.exports = { restrictTo, isAdmin };

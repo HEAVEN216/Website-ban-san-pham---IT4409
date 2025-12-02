@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Package, Eye, X, Clock, CheckCircle, XCircle, Truck, ArrowLeft, RefreshCw } from "lucide-react";
-import { orderService } from "../services";
+import { useNavigate, Link } from "react-router-dom";
+import { Package, Eye, X, Calendar, MapPin, CreditCard, ArrowLeft, RefreshCw, XCircle } from "lucide-react";
+import CustomerNavbar from "../components/CustomerNavbar";
+import { orderService, cartService } from "../services";
 import { useAuth } from "../contexts/AuthContext";
 
 const OrderHistory = () => {
@@ -83,8 +84,39 @@ const OrderHistory = () => {
   };
 
   const handleReorder = async (order) => {
-    // TODO: Implement reorder functionality
-    alert("Chức năng đặt lại đơn hàng đang được phát triển!");
+    if (!window.confirm("Thêm tất cả sản phẩm từ đơn hàng này vào giỏ hàng?")) {
+      return;
+    }
+
+    try {
+      // Add each item from order to cart
+      let successCount = 0;
+      let failedCount = 0;
+      
+      for (const item of order.items) {
+        try {
+          // Only add if product still exists and has ID
+          if (item.product && item.product._id) {
+            await cartService.addItem(item.product._id, item.quantity);
+            successCount++;
+          } else {
+            failedCount++;
+          }
+        } catch (err) {
+          console.error(`Failed to add ${item.productName}:`, err);
+          failedCount++;
+        }
+      }
+
+      if (successCount > 0) {
+        alert(`✅ Đã thêm ${successCount} sản phẩm vào giỏ hàng!${failedCount > 0 ? `\n⚠️ ${failedCount} sản phẩm không thể thêm (có thể đã hết hàng).` : ''}`);
+        navigate("/cart");
+      } else {
+        alert("❌ Không thể thêm sản phẩm nào. Có thể các sản phẩm đã ngừng kinh doanh.");
+      }
+    } catch (err) {
+      alert("Lỗi: " + (err.response?.data?.message || err.message));
+    }
   };
 
   const handleFilterChange = (status) => {
@@ -138,40 +170,18 @@ const OrderHistory = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-gray-50">
+        <CustomerNavbar />
+        <div className="flex items-center justify-center py-20">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <button
-              onClick={() => navigate("/")}
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition"
-            >
-              <ArrowLeft size={20} />
-              <span>Trang chủ</span>
-            </button>
-            
-            <Link to="/" className="text-2xl font-bold text-blue-600">
-              TechStore
-            </Link>
-
-            <Link
-              to="/cart"
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-            >
-              <Package size={20} />
-              <span className="hidden md:inline">Giỏ hàng</span>
-            </Link>
-          </div>
-        </div>
-      </header>
+      <CustomerNavbar />
 
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-8">Đơn hàng của tôi</h1>

@@ -256,7 +256,7 @@ const updateUser = catchAsync(async (req, res, next) => {
   }
 
   if (role !== undefined) {
-    if (!['customer', 'staff', 'admin'].includes(role)) {
+    if (!['customer', 'admin'].includes(role)) {
       throw ApiError.badRequest('Invalid role');
     }
     user.role = role;

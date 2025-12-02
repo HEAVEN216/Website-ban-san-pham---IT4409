@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ShoppingCart, Heart, Star, Package, TrendingUp, Zap } from "lucide-react";
+import CustomerNavbar from "../components/CustomerNavbar";
 import { productService, categoryService } from "../services";
 
 const HomePage = () => {
@@ -46,6 +47,8 @@ const HomePage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <CustomerNavbar />
+      
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white">
         <div className="container mx-auto px-4 py-20">

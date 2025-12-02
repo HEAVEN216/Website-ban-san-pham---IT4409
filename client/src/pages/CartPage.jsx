@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { ShoppingCart, Trash2, Plus, Minus, ArrowLeft, ShoppingBag, Tag } from "lucide-react";
-import { cartService } from "../services";
+import { useNavigate, Link } from "react-router-dom";
+import { ShoppingCart, Trash2, Plus, Minus, ArrowLeft, Tag, X } from "lucide-react";
+import CustomerNavbar from "../components/CustomerNavbar";
+import { cartService, couponService } from "../services";
 import { useAuth } from "../contexts/AuthContext";
 
 const CartPage = () => {
@@ -14,6 +15,8 @@ const CartPage = () => {
   const [updating, setUpdating] = useState({});
   const [couponCode, setCouponCode] = useState("");
   const [applyingCoupon, setApplyingCoupon] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [discountAmount, setDiscountAmount] = useState(0);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -42,6 +45,15 @@ const CartPage = () => {
   const handleUpdateQuantity = async (productId, newQuantity) => {
     if (newQuantity < 1) return;
     
+    // Validate stock before updating
+    const item = cart.items.find(i => i.product._id === productId);
+    const availableStock = item?.product?.stock || 0;
+    
+    if (newQuantity > availableStock) {
+      alert(`❌ Chỉ còn ${availableStock} sản phẩm trong kho!`);
+      return;
+    }
+    
     setUpdating({ ...updating, [productId]: true });
     try {
       const response = await cartService.updateItem(productId, newQuantity);
@@ -49,7 +61,8 @@ const CartPage = () => {
         fetchCart();
       }
     } catch (err) {
-      alert("Lỗi: " + (err.response?.data?.message || err.message));
+      const message = err.response?.data?.message || err.message;
+      alert("Lỗi: " + message);
     } finally {
       setUpdating({ ...updating, [productId]: false });
     }
@@ -91,13 +104,28 @@ const CartPage = () => {
 
     setApplyingCoupon(true);
     try {
-      // TODO: Implement apply coupon API
-      alert("Chức năng áp dụng mã giảm giá đang được phát triển!");
+      const subtotal = calculateSubtotal();
+      const response = await couponService.validateCoupon(couponCode, subtotal);
+      
+      if (response.success) {
+        setAppliedCoupon(response.data.coupon);
+        setDiscountAmount(response.data.discountAmount);
+        alert(`✅ Áp dụng mã thành công! Giảm ${formatPrice(response.data.discountAmount)}`);
+      }
     } catch (err) {
-      alert("Mã giảm giá không hợp lệ!");
+      const message = err.response?.data?.message || "Mã giảm giá không hợp lệ!";
+      alert(message);
+      setAppliedCoupon(null);
+      setDiscountAmount(0);
     } finally {
       setApplyingCoupon(false);
     }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setDiscountAmount(0);
+    setCouponCode("");
   };
 
   const formatPrice = (price) => {
@@ -118,14 +146,16 @@ const CartPage = () => {
 
   const calculateTotal = () => {
     const subtotal = calculateSubtotal();
-    // TODO: Add shipping fee and discount from coupon
-    return subtotal;
+    return Math.max(0, subtotal - discountAmount); // Ensure non-negative
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-gray-50">
+        <CustomerNavbar />
+        <div className="flex items-center justify-center py-20">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
       </div>
     );
   }
@@ -134,29 +164,7 @@ const CartPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <button
-              onClick={() => navigate("/")}
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition"
-            >
-              <ArrowLeft size={20} />
-              <span>Tiếp tục mua sắm</span>
-            </button>
-            
-            <Link to="/" className="text-2xl font-bold text-blue-600">
-              TechStore
-            </Link>
-
-            <div className="flex items-center gap-2 text-gray-600">
-              <ShoppingCart size={20} />
-              <span className="font-medium">{cart?.items?.length || 0} sản phẩm</span>
-            </div>
-          </div>
-        </div>
-      </header>
+      <CustomerNavbar />
 
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-8">Giỏ hàng của bạn</h1>
@@ -318,25 +326,45 @@ const CartPage = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Mã giảm giá
                   </label>
-                  <div className="flex gap-2">
-                    <div className="flex-1 relative">
-                      <Tag className="absolute left-3 top-3 text-gray-400" size={18} />
-                      <input
-                        type="text"
-                        value={couponCode}
-                        onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                        placeholder="Nhập mã..."
-                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
+                  {appliedCoupon ? (
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Tag className="text-green-600" size={18} />
+                          <div>
+                            <div className="font-semibold text-green-900">{appliedCoupon.code}</div>
+                            <div className="text-sm text-green-700">Giảm {formatPrice(discountAmount)}</div>
+                          </div>
+                        </div>
+                        <button
+                          onClick={handleRemoveCoupon}
+                          className="text-red-600 hover:text-red-800 text-sm font-medium transition"
+                        >
+                          Xóa
+                        </button>
+                      </div>
                     </div>
-                    <button
-                      onClick={handleApplyCoupon}
-                      disabled={applyingCoupon}
-                      className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition disabled:opacity-50"
-                    >
-                      {applyingCoupon ? "..." : "Áp dụng"}
-                    </button>
-                  </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <div className="flex-1 relative">
+                        <Tag className="absolute left-3 top-3 text-gray-400" size={18} />
+                        <input
+                          type="text"
+                          value={couponCode}
+                          onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                          placeholder="Nhập mã..."
+                          className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      </div>
+                      <button
+                        onClick={handleApplyCoupon}
+                        disabled={applyingCoupon || !couponCode.trim()}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {applyingCoupon ? "..." : "Áp dụng"}
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Price Breakdown */}
@@ -349,7 +377,12 @@ const CartPage = () => {
                     <span>Phí vận chuyển:</span>
                     <span className="font-medium text-green-600">Miễn phí</span>
                   </div>
-                  {/* TODO: Add discount from coupon */}
+                  {appliedCoupon && discountAmount > 0 && (
+                    <div className="flex justify-between text-green-600">
+                      <span>Giảm giá ({appliedCoupon.code}):</span>
+                      <span className="font-medium">-{formatPrice(discountAmount)}</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Total */}
@@ -361,7 +394,12 @@ const CartPage = () => {
                 {/* Actions */}
                 <div className="space-y-3">
                   <button
-                    onClick={() => navigate("/checkout")}
+                    onClick={() => navigate("/checkout", { 
+                      state: { 
+                        appliedCoupon, 
+                        discountAmount 
+                      } 
+                    })}
                     className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
                   >
                     Tiến hành thanh toán

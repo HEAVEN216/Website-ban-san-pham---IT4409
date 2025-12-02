@@ -6,3 +6,5 @@ export { default as orderService } from './order.service';
 export { default as categoryService } from './category.service';
 export { default as userService } from './user.service';
 export { default as adminService } from './admin.service';
+export { default as couponService } from './coupon.service';
+export { default as reviewService } from './review.service';

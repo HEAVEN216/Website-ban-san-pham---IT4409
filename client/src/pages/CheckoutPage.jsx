@@ -1,12 +1,18 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { ShoppingCart, MapPin, CreditCard, Package, ArrowLeft, Plus, CheckCircle } from "lucide-react";
+import { useNavigate, useLocation, Link } from "react-router-dom";
+import { ShoppingCart, MapPin, CreditCard, Package, ArrowLeft, Plus, CheckCircle, Tag } from "lucide-react";
+import CustomerNavbar from "../components/CustomerNavbar";
 import { cartService, orderService, userService } from "../services";
 import { useAuth } from "../contexts/AuthContext";
 
 const CheckoutPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isAuthenticated, user } = useAuth();
+  
+  // Get coupon from CartPage if passed
+  const passedCoupon = location.state?.appliedCoupon;
+  const passedDiscount = location.state?.discountAmount || 0;
   
   const [cart, setCart] = useState(null);
   const [addresses, setAddresses] = useState([]);
@@ -16,6 +22,9 @@ const CheckoutPage = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState(passedCoupon);
+  const [discountAmount, setDiscountAmount] = useState(passedDiscount);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   // Add new address modal
   const [showAddressForm, setShowAddressForm] = useState(false);
@@ -107,7 +116,7 @@ const CheckoutPage = () => {
     }
   };
 
-  const handlePlaceOrder = async () => {
+  const handlePlaceOrderClick = () => {
     if (!selectedAddressId) {
       alert("Vui lòng chọn địa chỉ giao hàng!");
       return;
@@ -118,6 +127,11 @@ const CheckoutPage = () => {
       return;
     }
 
+    // Show confirmation modal
+    setShowConfirmModal(true);
+  };
+
+  const handleConfirmOrder = async () => {
     setSubmitting(true);
     try {
       const selectedAddress = addresses.find(addr => addr._id === selectedAddressId);
@@ -132,17 +146,19 @@ const CheckoutPage = () => {
           city: selectedAddress.city
         },
         paymentMethod: paymentMethod,
-        note: note.trim()
+        note: note.trim(),
+        couponCode: appliedCoupon?.code || undefined
       };
 
       const response = await orderService.createOrder(orderData);
       
       if (response.success) {
-        alert("Đặt hàng thành công! Cảm ơn bạn đã mua hàng.");
+        setShowConfirmModal(false);
+        alert("✅ Đặt hàng thành công! Cảm ơn bạn đã mua hàng.");
         navigate("/orders");
       }
     } catch (err) {
-      alert("Lỗi: " + (err.response?.data?.message || err.message));
+      alert("❌ Lỗi: " + (err.response?.data?.message || err.message));
     } finally {
       setSubmitting(false);
     }
@@ -161,42 +177,24 @@ const CheckoutPage = () => {
   };
 
   const calculateTotal = () => {
-    return calculateSubtotal(); // Add shipping, discount later
+    const subtotal = calculateSubtotal();
+    return Math.max(0, subtotal - discountAmount);
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-gray-50">
+        <CustomerNavbar />
+        <div className="flex items-center justify-center py-20">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <button
-              onClick={() => navigate("/cart")}
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition"
-            >
-              <ArrowLeft size={20} />
-              <span>Quay lại giỏ hàng</span>
-            </button>
-            
-            <Link to="/" className="text-2xl font-bold text-blue-600">
-              TechStore
-            </Link>
-
-            <div className="flex items-center gap-2 text-gray-600">
-              <ShoppingCart size={20} />
-              <span className="font-medium">Thanh toán</span>
-            </div>
-          </div>
-        </div>
-      </header>
+      <CustomerNavbar />
 
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-8">Thanh toán đơn hàng</h1>
@@ -400,6 +398,15 @@ const CheckoutPage = () => {
                   <span>Phí vận chuyển:</span>
                   <span className="font-medium text-green-600">Miễn phí</span>
                 </div>
+                {appliedCoupon && discountAmount > 0 && (
+                  <div className="flex justify-between text-green-600">
+                    <div className="flex items-center gap-1">
+                      <Tag size={16} />
+                      <span>Giảm giá ({appliedCoupon.code}):</span>
+                    </div>
+                    <span className="font-medium">-{formatPrice(discountAmount)}</span>
+                  </div>
+                )}
               </div>
 
               {/* Total */}
@@ -410,7 +417,7 @@ const CheckoutPage = () => {
 
               {/* Place Order Button */}
               <button
-                onClick={handlePlaceOrder}
+                onClick={handlePlaceOrderClick}
                 disabled={submitting || !selectedAddressId}
                 className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -543,6 +550,71 @@ const CheckoutPage = () => {
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
               >
                 Thêm địa chỉ
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Modal */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full">
+            <div className="border-b border-gray-200 px-6 py-4">
+              <h3 className="text-xl font-semibold text-gray-900">Xác nhận đặt hàng</h3>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <p className="text-gray-700">
+                Bạn có chắc chắn muốn đặt hàng với thông tin sau không?
+              </p>
+
+              <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Số lượng sản phẩm:</span>
+                  <span className="font-medium">{cart?.items?.length || 0}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Tạm tính:</span>
+                  <span className="font-medium">{formatPrice(calculateSubtotal())}</span>
+                </div>
+                {appliedCoupon && discountAmount > 0 && (
+                  <div className="flex justify-between text-sm text-green-600">
+                    <span>Giảm giá:</span>
+                    <span className="font-medium">-{formatPrice(discountAmount)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-base font-bold pt-2 border-t border-gray-300">
+                  <span>Tổng cộng:</span>
+                  <span className="text-blue-600">{formatPrice(calculateTotal())}</span>
+                </div>
+                <div className="flex justify-between text-sm pt-2">
+                  <span className="text-gray-600">Phương thức:</span>
+                  <span className="font-medium uppercase">{paymentMethod}</span>
+                </div>
+              </div>
+
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                <p className="text-sm text-yellow-800">
+                  <strong>⚠️ Lưu ý:</strong> Đơn hàng không thể chỉnh sửa sau khi đặt. Vui lòng kiểm tra kỹ thông tin.
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-gray-50 px-6 py-4 flex justify-end gap-3 border-t border-gray-200">
+              <button
+                onClick={() => setShowConfirmModal(false)}
+                disabled={submitting}
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition disabled:opacity-50"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={handleConfirmOrder}
+                disabled={submitting}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {submitting ? "Đang xử lý..." : "Xác nhận đặt hàng"}
               </button>
             </div>
           </div>
