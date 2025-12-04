@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { ShoppingCart, Trash2, Plus, Minus, ArrowLeft, Tag, X } from "lucide-react";
+import { ShoppingCart, Trash2, Plus, Minus, ArrowLeft, Tag, X, ShoppingBag } from "lucide-react";
 import CustomerNavbar from "../components/CustomerNavbar";
 import { cartService, couponService } from "../services";
 import { useAuth } from "../contexts/AuthContext";
@@ -132,16 +132,25 @@ const CartPage = () => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
   };
 
-  const calculateItemTotal = (price, quantity, discount = 0) => {
-    const discountedPrice = price * (1 - discount / 100);
-    return discountedPrice * quantity;
+  // Lấy đơn giá mỗi item từ cart (ưu tiên priceAtAdd do backend tính sẵn)
+  const getItemUnitPrice = (item) => {
+    const product = item.product || {};
+
+    if (typeof item.priceAtAdd === "number") {
+      return item.priceAtAdd;
+    }
+
+    const fallback = product.price * (1 - (product.discount || 0) / 100);
+    return Number.isFinite(fallback) ? fallback : 0;
+  };
+
+  const calculateItemTotal = (item) => {
+    return getItemUnitPrice(item) * item.quantity;
   };
 
   const calculateSubtotal = () => {
     if (!cart?.items) return 0;
-    return cart.items.reduce((sum, item) => 
-      sum + calculateItemTotal(item.price, item.quantity, item.product?.discount || 0), 0
-    );
+    return cart.items.reduce((sum, item) => sum + calculateItemTotal(item), 0);
   };
 
   const calculateTotal = () => {
@@ -215,7 +224,8 @@ const CartPage = () => {
                   {cart.items.map((item) => {
                     const product = item.product || {};
                     const isUpdating = updating[product._id];
-                    const itemTotal = calculateItemTotal(item.price, item.quantity, product.discount);
+                    const unitPrice = getItemUnitPrice(item);
+                    const itemTotal = calculateItemTotal(item);
 
                     return (
                       <div key={product._id} className="p-6 hover:bg-gray-50 transition">
@@ -254,18 +264,20 @@ const CartPage = () => {
                               {product.discount > 0 ? (
                                 <div className="flex items-center gap-2">
                                   <span className="text-lg font-bold text-blue-600">
-                                    {formatPrice(item.price * (1 - product.discount / 100))}
+                                    {formatPrice(unitPrice)}
                                   </span>
-                                  <span className="text-sm text-gray-400 line-through">
-                                    {formatPrice(item.price)}
-                                  </span>
+                                  {typeof product.price === "number" && (
+                                    <span className="text-sm text-gray-400 line-through">
+                                      {formatPrice(product.price)}
+                                    </span>
+                                  )}
                                   <span className="px-2 py-0.5 bg-red-500 text-white text-xs font-bold rounded">
                                     -{product.discount}%
                                   </span>
                                 </div>
                               ) : (
                                 <span className="text-lg font-bold text-blue-600">
-                                  {formatPrice(item.price)}
+                                  {formatPrice(unitPrice)}
                                 </span>
                               )}
                             </div>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Package, Eye, X, Calendar, MapPin, CreditCard, ArrowLeft, RefreshCw, XCircle } from "lucide-react";
+import { Package, Eye, X, Calendar, MapPin, CreditCard, ArrowLeft, RefreshCw, XCircle, Clock, Truck, CheckCircle } from "lucide-react";
 import CustomerNavbar from "../components/CustomerNavbar";
 import { orderService, cartService } from "../services";
 import { useAuth } from "../contexts/AuthContext";

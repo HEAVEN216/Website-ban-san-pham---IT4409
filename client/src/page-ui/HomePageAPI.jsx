@@ -67,13 +67,6 @@ const HomePage = () => {
                 <ShoppingCart size={20} />
                 Mua sắm ngay
               </Link>
-              <Link
-                to="/admin"
-                className="inline-flex items-center gap-2 bg-transparent border-2 border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-all"
-              >
-                <Package size={20} />
-                Quản trị
-              </Link>
             </div>
           </div>
         </div>
