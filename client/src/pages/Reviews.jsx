@@ -197,7 +197,7 @@ const ReviewDetailModal = ({ product, onClose, onDeleteReview }) => {
               </div>
               <button
                 onClick={onClose}
-                className="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-lg transition-all duration-200"
+                className="text-gray-800 bg-white hover:bg-gray-100 p-2 rounded-lg transition-all duration-200 shadow-sm"
               >
                 <X className="w-6 h-6" />
               </button>

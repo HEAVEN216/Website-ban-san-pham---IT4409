@@ -521,7 +521,7 @@ const OrdersPage = () => {
                 <select
                   value={newStatus}
                   onChange={(e) => setNewStatus(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
                 >
                   <option value="processing">Đang xử lý</option>
                   <option value="completed">Hoàn thành</option>
@@ -540,7 +540,7 @@ const OrdersPage = () => {
                   value={updateReason}
                   onChange={(e) => setUpdateReason(e.target.value)}
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
                   placeholder="Nhập lý do cập nhật (nếu có)..."
                 />
               </div>

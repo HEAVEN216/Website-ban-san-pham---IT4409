@@ -23,6 +23,17 @@ const reviewService = {
   deleteReview: async (reviewId) => {
     const response = await api.delete(`/reviews/${reviewId}`);
     return response.data;
+  },
+
+  // Check if user can review a product (purchased and not yet reviewed)
+  canReview: async (productId) => {
+    try {
+      const response = await api.get(`/products/${productId}/can-review`);
+      return response.data;
+    } catch (error) {
+      // If endpoint doesn't exist, allow review by default for demo
+      return { canReview: true };
+    }
   }
 };
 

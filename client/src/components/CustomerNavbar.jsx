@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ShoppingCart, User, LogOut, Package, Store, Menu, X, ChevronDown } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { cartService } from '../services';
 
 /**
  * Customer-facing Navbar with user dropdown
@@ -13,6 +14,28 @@ const CustomerNavbar = () => {
   const navigate = useNavigate();
   const [showDropdown, setShowDropdown] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [cartItemCount, setCartItemCount] = useState(0);
+
+  // Fetch cart count when authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchCartCount();
+    } else {
+      setCartItemCount(0);
+    }
+  }, [isAuthenticated]);
+
+  const fetchCartCount = async () => {
+    try {
+      const response = await cartService.getCart();
+      if (response.success && response.data.cart?.items) {
+        const totalItems = response.data.cart.items.reduce((sum, item) => sum + item.quantity, 0);
+        setCartItemCount(totalItems);
+      }
+    } catch (err) {
+      console.error('Error fetching cart count:', err);
+    }
+  };
 
   const handleLogout = async () => {
     await logout();
@@ -64,6 +87,11 @@ const CustomerNavbar = () => {
                 title="Giỏ hàng"
               >
                 <ShoppingCart size={24} />
+                {cartItemCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                    {cartItemCount > 99 ? '99+' : cartItemCount}
+                  </span>
+                )}
               </Link>
             )}
 

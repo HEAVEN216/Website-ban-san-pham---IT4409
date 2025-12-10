@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
-import { Home, Package, Users, Shield, Settings, LogOut, Menu , DollarSign , Car , Star} from "lucide-react";
+import { Home, Package, Users, Shield, Settings, LogOut, Menu, DollarSign, Car, Star, UserCog } from "lucide-react";
 import { Button } from "./ui/Button";
 
 const Sidebar = () => {
@@ -11,6 +11,8 @@ const Sidebar = () => {
     { name: "Đơn hàng", icon: <Car size={18} />, path: "/admin/orders" },
     { name: "Đánh giá", icon: <Star size={18} />, path: "/admin/reviews" },
     { name: "Thống kê doanh thu", icon: <DollarSign size={18} />, path: "/admin/income" },
+    { name: "Quản lý Admin", icon: <UserCog size={18} />, path: "/admin/admins" },
+    { name: "Cài đặt", icon: <Settings size={18} />, path: "/admin/settings" },
   ];
 
   return (

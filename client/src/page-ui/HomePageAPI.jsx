@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { ShoppingCart, Heart, Star, Package, TrendingUp, Zap } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { ShoppingCart, Heart, Star, Package, TrendingUp, Zap, Phone, Mail, MapPin, Facebook, Youtube, MessageCircle } from "lucide-react";
 import CustomerNavbar from "../components/CustomerNavbar";
-import { productService, categoryService } from "../services";
+import { productService, categoryService, cartService } from "../services";
+import { useAuth } from "../contexts/AuthContext";
 
 const HomePage = () => {
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [addingToCart, setAddingToCart] = useState(null);
 
   useEffect(() => {
     fetchData();
@@ -43,6 +47,53 @@ const HomePage = () => {
 
   const calculateDiscountedPrice = (price, discount) => {
     return price * (1 - discount / 100);
+  };
+
+  const renderStars = (rating) => {
+    const rounded = Math.round(rating || 0);
+    return (
+      <div className="flex items-center">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <Star
+            key={star}
+            size={14}
+            className={
+              star <= rounded
+                ? "text-yellow-400 fill-current"
+                : "text-gray-300"
+            }
+          />
+        ))}
+      </div>
+    );
+  };
+
+  const handleAddToCart = async (e, product) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!isAuthenticated) {
+      alert("Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng!");
+      navigate("/login");
+      return;
+    }
+
+    if (product.stock === 0) {
+      alert("Sản phẩm đã hết hàng!");
+      return;
+    }
+
+    setAddingToCart(product._id);
+    try {
+      const response = await cartService.addItem(product._id, 1);
+      if (response.success) {
+        alert(`Đã thêm "${product.name}" vào giỏ hàng!`);
+      }
+    } catch (err) {
+      alert("Lỗi: " + (err.response?.data?.message || err.message));
+    } finally {
+      setAddingToCart(null);
+    }
   };
 
   return (
@@ -166,16 +217,14 @@ const HomePage = () => {
                     </Link>
 
                     <div className="flex items-center gap-2 mb-3">
-                      <div className="flex items-center">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            size={14}
-                            className="text-yellow-400 fill-current"
-                          />
-                        ))}
-                      </div>
-                      <span className="text-xs text-gray-500">(4.5)</span>
+                      {renderStars(product.ratingsAverage || 0)}
+                      {product.ratingsQuantity > 0 ? (
+                        <span className="text-xs text-gray-500">
+                          {Number(product.ratingsAverage || 0).toFixed(1)} ({product.ratingsQuantity})
+                        </span>
+                      ) : (
+                        <span className="text-xs text-gray-500">Chưa có đánh giá</span>
+                      )}
                     </div>
 
                     <div className="flex items-end justify-between mb-3">
@@ -196,8 +245,17 @@ const HomePage = () => {
                         )}
                       </div>
 
-                      <button className="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 transition-all transform hover:scale-110 shadow-md">
-                        <ShoppingCart size={18} />
+                      <button 
+                        onClick={(e) => handleAddToCart(e, product)}
+                        disabled={addingToCart === product._id || product.stock === 0}
+                        className="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 transition-all transform hover:scale-110 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                        title={product.stock === 0 ? "Hết hàng" : "Thêm vào giỏ hàng"}
+                      >
+                        {addingToCart === product._id ? (
+                          <div className="w-[18px] h-[18px] border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <ShoppingCart size={18} />
+                        )}
                       </button>
                     </div>
 
@@ -253,23 +311,111 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-16">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Bạn đã sẵn sàng mua sắm?
-          </h2>
-          <p className="text-xl mb-8 text-blue-100">
-            Khám phá hàng ngàn sản phẩm công nghệ với giá tốt nhất
-          </p>
-          <Link
-            to="/register"
-            className="inline-block bg-white text-blue-600 px-8 py-4 rounded-lg font-semibold hover:bg-gray-100 transition-all transform hover:scale-105 shadow-lg"
-          >
-            Đăng ký ngay - Miễn phí
-          </Link>
+      {/* CTA Section - Chỉ hiển thị khi chưa đăng nhập */}
+      {!isAuthenticated && (
+        <section className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-16">
+          <div className="container mx-auto px-4 text-center">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              Bạn đã sẵn sàng mua sắm?
+            </h2>
+            <p className="text-xl mb-8 text-blue-100">
+              Khám phá hàng ngàn sản phẩm công nghệ với giá tốt nhất
+            </p>
+            <Link
+              to="/register"
+              className="inline-block bg-white text-blue-600 px-8 py-4 rounded-lg font-semibold hover:bg-gray-100 transition-all transform hover:scale-105 shadow-lg"
+            >
+              Đăng ký ngay - Miễn phí
+            </Link>
+          </div>
+        </section>
+      )}
+
+      {/* Footer */}
+      <footer className="bg-gray-900 text-gray-300 py-12">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {/* Về chúng tôi */}
+            <div>
+              <h3 className="text-xl font-bold text-white mb-4">Tech Store IT4409</h3>
+              <p className="text-gray-400 mb-4 text-sm leading-relaxed">
+                Hệ thống bán lẻ sản phẩm công nghệ chính hãng hàng đầu Việt Nam. 
+                Chuyên cung cấp điện thoại, laptop, tablet, phụ kiện và thiết bị điện tử từ các thương hiệu lớn: Apple, Samsung, Dell, HP, Asus, Lenovo...
+              </p>
+              <div className="flex gap-4">
+                <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center hover:bg-blue-700 transition">
+                  <Facebook size={20} className="text-white" />
+                </a>
+                <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center hover:bg-red-700 transition">
+                  <Youtube size={20} className="text-white" />
+                </a>
+                <a href="https://zalo.me" target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center hover:bg-blue-600 transition">
+                  <MessageCircle size={20} className="text-white" />
+                </a>
+              </div>
+            </div>
+
+            {/* Thông tin liên hệ */}
+            <div>
+              <h3 className="text-lg font-semibold text-white mb-4">Liên hệ</h3>
+              <ul className="space-y-3 text-sm">
+                <li className="flex items-start gap-3">
+                  <MapPin size={18} className="text-blue-500 mt-0.5 flex-shrink-0" />
+                  <span>Số 1 Đại Cố Việt, Hai Bà Trưng, Hà Nội (HUST)</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Phone size={18} className="text-blue-500 flex-shrink-0" />
+                  <span>Hotline: 1900 1234 56</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Mail size={18} className="text-blue-500 flex-shrink-0" />
+                  <span>support@techstore-it4409.vn</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Chính sách */}
+            <div>
+              <h3 className="text-lg font-semibold text-white mb-4">Chính sách</h3>
+              <ul className="space-y-2 text-sm">
+                <li><a href="#" className="hover:text-blue-400 transition">Chính sách bảo hành</a></li>
+                <li><a href="#" className="hover:text-blue-400 transition">Chính sách đổi trả</a></li>
+                <li><a href="#" className="hover:text-blue-400 transition">Chính sách vận chuyển</a></li>
+                <li><a href="#" className="hover:text-blue-400 transition">Chính sách bảo mật</a></li>
+                <li><a href="#" className="hover:text-blue-400 transition">Hướng dẫn mua hàng</a></li>
+                <li><a href="#" className="hover:text-blue-400 transition">Hướng dẫn thanh toán</a></li>
+              </ul>
+            </div>
+
+            {/* Hỗ trợ khách hàng */}
+            <div>
+              <h3 className="text-lg font-semibold text-white mb-4">Hỗ trợ khách hàng</h3>
+              <ul className="space-y-2 text-sm">
+                <li><a href="#" className="hover:text-blue-400 transition">Trung tâm hỗ trợ</a></li>
+                <li><a href="#" className="hover:text-blue-400 transition">Tra cứu đơn hàng</a></li>
+                <li><a href="#" className="hover:text-blue-400 transition">Tra cứu bảo hành</a></li>
+                <li><a href="#" className="hover:text-blue-400 transition">Hệ thống showroom</a></li>
+                <li><a href="#" className="hover:text-blue-400 transition">Đối tác kinh doanh</a></li>
+                <li><a href="#" className="hover:text-blue-400 transition">Tuyển dụng</a></li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Bottom bar */}
+          <div className="border-t border-gray-800 mt-10 pt-6">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+              <p className="text-sm text-gray-500">
+                © 2024 Tech Store IT4409. Dự án môn học Web - HUST. All rights reserved.
+              </p>
+              <div className="flex items-center gap-4">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/4/41/Visa_Logo.png" alt="Visa" className="h-6 object-contain" />
+                <img src="https://upload.wikimedia.org/wikipedia/commons/0/04/Mastercard-logo.png" alt="Mastercard" className="h-6 object-contain" />
+                <img src="https://upload.wikimedia.org/wikipedia/vi/f/fe/MoMo_Logo.png" alt="MoMo" className="h-6 object-contain" />
+              </div>
+            </div>
+          </div>
         </div>
-      </section>
+      </footer>
     </div>
   );
 };

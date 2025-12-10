@@ -160,7 +160,7 @@ const UsersPage = () => {
             placeholder="Tìm kiếm theo tên, email, username, số điện thoại..."
             value={search}
             onChange={handleSearchChange}
-            className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
           />
           {search && (
             <button
@@ -487,7 +487,7 @@ const UsersPage = () => {
                 <select
                   value={newRole}
                   onChange={(e) => setNewRole(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
                 >
                   <option value="customer">Customer (Khách hàng)</option>
                   <option value="staff">Staff (Nhân viên)</option>

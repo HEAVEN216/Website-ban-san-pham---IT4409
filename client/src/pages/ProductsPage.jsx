@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { ShoppingCart, Star, Filter, Search, Grid, List } from 'lucide-react';
 import CustomerNavbar from '../components/CustomerNavbar';
 import { productService, categoryService } from '../services';
@@ -8,6 +8,7 @@ import { productService, categoryService } from '../services';
  * ProductsPage - Trang danh sách sản phẩm với filter, search, và grid view
  */
 const ProductsPage = () => {
+  const { categorySlug } = useParams();
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -19,10 +20,25 @@ const ProductsPage = () => {
   const [sortBy, setSortBy] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [categoryName, setCategoryName] = useState('');
 
   useEffect(() => {
     fetchCategories();
   }, []);
+
+  // Set selected category when categorySlug changes or categories load
+  useEffect(() => {
+    if (categorySlug && categories.length > 0) {
+      const cat = categories.find(c => c.slug === categorySlug);
+      if (cat) {
+        setSelectedCategory(cat._id);
+        setCategoryName(cat.name);
+      }
+    } else if (!categorySlug) {
+      setSelectedCategory('');
+      setCategoryName('');
+    }
+  }, [categorySlug, categories]);
 
   useEffect(() => {
     fetchProducts();
@@ -94,7 +110,9 @@ const ProductsPage = () => {
       <div className="container mx-auto px-4 py-8">
         {/* Page Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Sản phẩm</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            {categoryName ? `Danh mục: ${categoryName}` : 'Sản phẩm'}
+          </h1>
           <p className="text-gray-600">
             Khám phá {products.length} sản phẩm công nghệ chính hãng
           </p>
@@ -114,7 +132,7 @@ const ProductsPage = () => {
                   setSearchTerm(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
               />
             </div>
 
@@ -125,7 +143,7 @@ const ProductsPage = () => {
                 setSelectedCategory(e.target.value);
                 setCurrentPage(1);
               }}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
             >
               <option value="">Tất cả danh mục</option>
               {categories.map((cat) => (
@@ -142,7 +160,7 @@ const ProductsPage = () => {
                 setSortBy(e.target.value);
                 setCurrentPage(1);
               }}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
             >
               <option value="">Sắp xếp mặc định</option>
               <option value="-createdAt">Mới nhất</option>
@@ -274,7 +292,7 @@ const ProductsPage = () => {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex justify-center items-center gap-2 mt-8">
+              <div className="flex justify-center items-center gap-2 mt-8 flex-wrap">
                 <button
                   onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
@@ -283,9 +301,36 @@ const ProductsPage = () => {
                   Trước
                 </button>
 
-                <span className="text-gray-600">
-                  Trang {currentPage} / {totalPages}
-                </span>
+                {/* Page Numbers */}
+                {[...Array(totalPages)].map((_, index) => {
+                  const page = index + 1;
+                  // Show first, last, current, and neighbors
+                  if (
+                    page === 1 ||
+                    page === totalPages ||
+                    (page >= currentPage - 1 && page <= currentPage + 1)
+                  ) {
+                    return (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`w-10 h-10 rounded-lg border transition ${
+                          currentPage === page
+                            ? 'bg-blue-600 text-white border-blue-600'
+                            : 'bg-white border-gray-300 hover:bg-gray-50 text-gray-700'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    );
+                  } else if (
+                    page === currentPage - 2 ||
+                    page === currentPage + 2
+                  ) {
+                    return <span key={page} className="px-2 text-gray-400">...</span>;
+                  }
+                  return null;
+                })}
 
                 <button
                   onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}

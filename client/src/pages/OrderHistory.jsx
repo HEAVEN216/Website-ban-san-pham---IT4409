@@ -489,7 +489,7 @@ const OrderHistory = () => {
                     onChange={(e) => setCancelReason(e.target.value)}
                     rows={3}
                     placeholder="Nhập lý do hủy đơn..."
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent mb-3"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent mb-3 bg-white text-gray-900"
                   />
                   <button
                     onClick={handleCancelOrder}

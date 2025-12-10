@@ -168,11 +168,22 @@ const CheckoutPage = () => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
   };
 
+  // Lấy đơn giá mỗi item từ cart (ưu tiên priceAtAdd do backend tính sẵn)
+  const getItemUnitPrice = (item) => {
+    const product = item.product || {};
+
+    if (typeof item.priceAtAdd === "number") {
+      return item.priceAtAdd;
+    }
+
+    const fallback = (product.price || 0) * (1 - (product.discount || 0) / 100);
+    return Number.isFinite(fallback) ? fallback : 0;
+  };
+
   const calculateSubtotal = () => {
     if (!cart?.items) return 0;
     return cart.items.reduce((sum, item) => {
-      const price = item.price * (1 - (item.product?.discount || 0) / 100);
-      return sum + price * item.quantity;
+      return sum + getItemUnitPrice(item) * item.quantity;
     }, 0);
   };
 
@@ -346,7 +357,7 @@ const CheckoutPage = () => {
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 rows={4}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
                 placeholder="Ghi chú về đơn hàng, ví dụ: thời gian hay chỉ dẫn địa điểm giao hàng chi tiết hơn..."
               />
             </div>
@@ -364,7 +375,7 @@ const CheckoutPage = () => {
               <div className="space-y-3 mb-6 pb-6 border-b border-gray-200">
                 {cart?.items?.map((item) => {
                   const product = item.product || {};
-                  const price = item.price * (1 - (product.discount || 0) / 100);
+                  const unitPrice = getItemUnitPrice(item);
                   return (
                     <div key={product._id} className="flex gap-3">
                       <img
@@ -381,7 +392,7 @@ const CheckoutPage = () => {
                         <p className="text-sm text-gray-600">SL: {item.quantity}</p>
                       </div>
                       <div className="text-sm font-medium text-gray-900">
-                        {formatPrice(price * item.quantity)}
+                        {formatPrice(unitPrice * item.quantity)}
                       </div>
                     </div>
                   );
@@ -456,7 +467,7 @@ const CheckoutPage = () => {
                     type="text"
                     value={newAddress.fullName}
                     onChange={(e) => setNewAddress({ ...newAddress, fullName: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
                     required
                   />
                 </div>
@@ -469,7 +480,7 @@ const CheckoutPage = () => {
                     type="tel"
                     value={newAddress.phone}
                     onChange={(e) => setNewAddress({ ...newAddress, phone: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
                     required
                   />
                 </div>
@@ -484,7 +495,7 @@ const CheckoutPage = () => {
                   value={newAddress.street}
                   onChange={(e) => setNewAddress({ ...newAddress, street: e.target.value })}
                   placeholder="Số nhà, tên đường..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
                   required
                 />
               </div>
@@ -496,7 +507,7 @@ const CheckoutPage = () => {
                     type="text"
                     value={newAddress.ward}
                     onChange={(e) => setNewAddress({ ...newAddress, ward: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
                   />
                 </div>
 
@@ -506,7 +517,7 @@ const CheckoutPage = () => {
                     type="text"
                     value={newAddress.district}
                     onChange={(e) => setNewAddress({ ...newAddress, district: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
                   />
                 </div>
 
@@ -518,7 +529,7 @@ const CheckoutPage = () => {
                     type="text"
                     value={newAddress.city}
                     onChange={(e) => setNewAddress({ ...newAddress, city: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
                     required
                   />
                 </div>

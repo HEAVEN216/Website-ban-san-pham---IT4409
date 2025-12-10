@@ -278,7 +278,7 @@ const CategoriesPage = () => {
             placeholder="Tìm kiếm danh mục..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
           />
           {search && (
             <button
@@ -360,7 +360,7 @@ const CategoriesPage = () => {
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
                   placeholder="Nhập tên danh mục..."
                   required
                 />
@@ -374,7 +374,7 @@ const CategoriesPage = () => {
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
                   placeholder="Nhập mô tả danh mục..."
                 />
               </div>
@@ -387,7 +387,7 @@ const CategoriesPage = () => {
                   <select
                     value={formData.parent}
                     onChange={(e) => setFormData({ ...formData, parent: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
                   >
                     <option value="">-- Không có (Level 1) --</option>
                     {categories
@@ -410,7 +410,7 @@ const CategoriesPage = () => {
                     onChange={(e) => setFormData({ ...formData, level: e.target.value })}
                     min="1"
                     max="3"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
                   />
                   <p className="mt-1 text-xs text-gray-500">
                     Level 1: Chính, Level 2: Phụ, Level 3: Chi tiết
