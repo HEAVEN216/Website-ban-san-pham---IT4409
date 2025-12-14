@@ -340,13 +340,13 @@ const ProductDetail = () => {
                       onClick={() => setQuantity(Math.max(1, quantity - 1))}
                       className="w-10 h-10 flex items-center justify-center border border-gray-300 rounded-lg hover:bg-gray-100 transition bg-white text-gray-700"
                     >
-                      <Minus size={18} className="text-gray-700" />
+                      <span className="text-black font-bold text-xl">−</span>
                     </button>
                     <input
                       type="number"
                       value={quantity}
                       onChange={(e) => setQuantity(Math.max(1, Math.min(product.stock, parseInt(e.target.value) || 1)))}
-                      className="w-20 text-center border border-gray-300 rounded-lg py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-20 text-center border border-gray-300 rounded-lg py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       min="1"
                       max={product.stock}
                     />
@@ -354,7 +354,7 @@ const ProductDetail = () => {
                       onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
                       className="w-10 h-10 flex items-center justify-center border border-gray-300 rounded-lg hover:bg-gray-100 transition bg-white text-gray-700"
                     >
-                      <Plus size={18} className="text-gray-700" />
+                      <span className="text-black font-bold text-xl">+</span>
                     </button>
                     <span className="text-sm text-gray-500">({product.stock} sản phẩm có sẵn)</span>
                   </div>

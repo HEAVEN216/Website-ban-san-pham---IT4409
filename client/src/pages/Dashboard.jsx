@@ -19,7 +19,15 @@ const DashboardPage = () => {
       setLoading(true);
       const response = await adminService.getStats();
       if (response.success) {
-        setStats(response.data);
+        // Map data từ API response
+        const data = response.data;
+        setStats({
+          totalProducts: data.summary?.totalProducts || 0,
+          totalUsers: data.summary?.totalUsers || 0,
+          totalOrders: data.orders?.total || data.summary?.totalOrders || 0,
+          totalRevenue: data.revenue?.total || 0,
+          ordersByStatus: data.orders?.byStatus || null
+        });
       }
     } catch (err) {
       console.error('Error fetching stats:', err);

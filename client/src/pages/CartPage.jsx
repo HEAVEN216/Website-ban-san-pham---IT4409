@@ -288,19 +288,19 @@ const CartPage = () => {
                                 <button
                                   onClick={() => handleUpdateQuantity(product._id, item.quantity - 1)}
                                   disabled={item.quantity <= 1 || isUpdating}
-                                  className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                  className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed bg-white"
                                 >
-                                  <Minus size={14} />
+                                  <span className="text-black font-bold text-lg">−</span>
                                 </button>
-                                <span className="w-12 text-center font-medium">
+                                <span className="w-12 text-center font-medium text-gray-900">
                                   {isUpdating ? "..." : item.quantity}
                                 </span>
                                 <button
                                   onClick={() => handleUpdateQuantity(product._id, item.quantity + 1)}
                                   disabled={item.quantity >= (product.stock || 999) || isUpdating}
-                                  className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                  className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed bg-white"
                                 >
-                                  <Plus size={14} />
+                                  <span className="text-black font-bold text-lg">+</span>
                                 </button>
                               </div>
 

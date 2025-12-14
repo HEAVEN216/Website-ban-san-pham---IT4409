@@ -5,22 +5,7 @@ import 'react-datepicker/dist/react-datepicker.css';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { Download, Eye, Trash2 } from 'lucide-react';
 import Papa from 'papaparse';
-
-// ------------------------- Mock Data -------------------------
-const mockOrders = [
-  { id: 'ORD-1001', customerName: 'Nguyen Van A', date: '2025-10-16T10:24:00+07:00', channel: 'Online', status: 'Completed', items: [ { name: 'Tai nghe X', category: 'Electronics', qty: 1, unitPrice: 1200000 }, { name: 'Cap sac', category: 'Electronics', qty: 2, unitPrice: 80000 } ], amount: 1360000 },
-  { id: 'ORD-1002', customerName: 'Tran Thi B', date: '2025-10-18T14:12:00+07:00', channel: 'Store', status: 'Completed', items: [ { name: 'Ao polo', category: 'Apparel', qty: 2, unitPrice: 350000 } ], amount: 700000 },
-  { id: 'ORD-1003', customerName: 'Le Van C', date: '2025-10-20T09:05:00+07:00', channel: 'Online', status: 'Pending', items: [ { name: 'Den ban', category: 'Home', qty: 1, unitPrice: 450000 } ], amount: 450000 },
-  { id: 'ORD-1004', customerName: 'Pham Thi D', date: '2025-10-22T19:40:00+07:00', channel: 'Online', status: 'Completed', items: [ { name: 'Loa mini', category: 'Electronics', qty: 1, unitPrice: 550000 } ], amount: 550000 },
-  { id: 'ORD-1005', customerName: 'Hoang Van E', date: '2025-10-24T11:11:00+07:00', channel: 'Store', status: 'Refunded', items: [ { name: 'Quan jeans', category: 'Apparel', qty: 1, unitPrice: 420000 } ], amount: 420000 },
-  { id: 'ORD-1006', customerName: 'Ngo Thi F', date: '2025-10-26T16:00:00+07:00', channel: 'Online', status: 'Completed', items: [ { name: 'Gia do', category: 'Home', qty: 3, unitPrice: 150000 } ], amount: 450000 },
-  { id: 'ORD-1007', customerName: 'Bui Van G', date: '2025-10-28T08:30:00+07:00', channel: 'Online', status: 'Completed', items: [ { name: 'Keyboard', category: 'Electronics', qty: 1, unitPrice: 900000 } ], amount: 900000 },
-  { id: 'ORD-1008', customerName: 'Dang Thi H', date: '2025-10-29T13:15:00+07:00', channel: 'Store', status: 'Completed', items: [ { name: 'Vay', category: 'Apparel', qty: 1, unitPrice: 600000 } ], amount: 600000 },
-  { id: 'ORD-1009', customerName: 'Vu Van I', date: '2025-11-01T09:45:00+07:00', channel: 'Online', status: 'Completed', items: [ { name: 'Den ngu', category: 'Home', qty: 2, unitPrice: 220000 } ], amount: 440000 },
-  { id: 'ORD-1010', customerName: 'Le Thi K', date: '2025-11-03T17:20:00+07:00', channel: 'Online', status: 'Pending', items: [ { name: 'Suat an', category: 'Home', qty: 1, unitPrice: 120000 } ], amount: 120000 },
-  { id: 'ORD-1011', customerName: 'Tran Van L', date: '2025-11-06T12:00:00+07:00', channel: 'Store', status: 'Completed', items: [ { name: 'Ao khoac', category: 'Apparel', qty: 1, unitPrice: 850000 } ], amount: 850000 },
-  { id: 'ORD-1012', customerName: 'Pham Van M', date: '2025-11-10T15:30:00+07:00', channel: 'Online', status: 'Completed', items: [ { name: 'Sạc dự phòng', category: 'Electronics', qty : 1, unitPrice: 300000 }, { name: 'Earphone', category: 'Electronics', qty : 1, unitPrice: 300000 }], amount: 600000 },
-];
+import { orderService } from '../services';
 
 // ------------------------- Helpers -------------------------
 const currency = (v) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(v);
@@ -307,20 +292,62 @@ const OrderModal = ({order, onClose, onDelete}) => {
 // ------------------------- Main Component -------------------------
 
 export default function Income(){
-  const [orders, setOrders] = useState(mockOrders);
+  const [orders, setOrders] = useState([]);
   const [from, setFrom] = useState(() => { const d = new Date(); d.setDate(d.getDate()-30); return d; });
   const [to, setTo] = useState(new Date());
   const [filters, setFilters] = useState({ category: '', channel: '', q: '' });
   const [selectedOrder, setSelectedOrder] = useState(null);
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  useEffect(()=>{
-    // simulate load when range changes
-    setLoading(true);
-    const t = setTimeout(()=> setLoading(false), 300);
-    return ()=>clearTimeout(t);
-  },[from,to,filters]);
+  // Fetch orders from API
+  const fetchOrders = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Lấy orders với limit hợp lệ (max 100 theo validator)
+      const response = await orderService.getAdminOrders({
+        limit: 100
+      });
+      
+      console.log('API Response:', response);
+      
+      if (response.success && response.data?.orders) {
+        // Transform API data to match component format
+        const transformedOrders = response.data.orders.map(order => ({
+          id: order.orderNumber || order._id,
+          _id: order._id,
+          customerName: order.user?.fullName || 'Khách hàng',
+          date: order.createdAt,
+          channel: order.paymentMethod === 'COD' ? 'COD' : 'Online',
+          status: order.orderStatus ? order.orderStatus.charAt(0).toUpperCase() + order.orderStatus.slice(1) : 'Pending',
+          paymentStatus: order.paymentStatus,
+          items: (order.items || []).map(item => ({
+            name: item.product?.name || 'Sản phẩm',
+            category: item.product?.category?.name || 'Chưa phân loại',
+            qty: item.quantity,
+            unitPrice: item.price
+          })),
+          amount: order.totalAmount || 0
+        }));
+        setOrders(transformedOrders);
+      } else {
+        setOrders([]);
+      }
+    } catch (err) {
+      console.error('Error fetching orders:', err);
+      console.error('Error details:', err.response?.data || err.message);
+      setError('Không thể tải dữ liệu đơn hàng: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchOrders();
+  }, [from, to]);
 
   const filtered = useMemo(()=>{
     return orders.filter(o=>{
@@ -369,6 +396,17 @@ export default function Income(){
     // delete order from list
     setOrders(prev => prev.filter(p=>p.id !== order.id));
     setSelectedOrder(null);
+  }
+
+  if (error) {
+    return (
+      <div className="p-8">
+        <h2 className="text-2xl font-semibold mb-4 text-gray-700">Thống kê doanh thu</h2>
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          {error}
+        </div>
+      </div>
+    );
   }
 
   return (
