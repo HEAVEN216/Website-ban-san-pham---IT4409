@@ -17,7 +17,14 @@ const buildOrderItemsMap = async (orderIds) => {
   }
 
   const orderItems = await OrderItem.find({ order: { $in: orderIds } })
-    .populate('product', 'name slug images price discount stock')
+    .populate({
+      path: 'product',
+      select: 'name slug images price discount stock category',
+      populate: {
+        path: 'category',
+        select: 'name'
+      }
+    })
     .lean();
 
   return orderItems.reduce((acc, item) => {

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, User, LogOut, Package, Store, Menu, X, ChevronDown } from 'lucide-react';
+import { ShoppingCart, User, LogOut, Package, Menu, X, ChevronDown } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { cartService } from '../services';
+import { subscribeCartUpdated } from '../utils/cartEvents';
 
 /**
  * Customer-facing Navbar with user dropdown
@@ -18,11 +19,19 @@ const CustomerNavbar = () => {
 
   // Fetch cart count when authenticated
   useEffect(() => {
-    if (isAuthenticated) {
-      fetchCartCount();
-    } else {
+    if (!isAuthenticated) {
       setCartItemCount(0);
+      return;
     }
+
+    fetchCartCount();
+    const unsubscribe = subscribeCartUpdated((totalItems) => {
+      setCartItemCount(totalItems);
+    });
+
+    return () => {
+      unsubscribe && unsubscribe();
+    };
   }, [isAuthenticated]);
 
   const fetchCartCount = async () => {
@@ -49,7 +58,14 @@ const CustomerNavbar = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 text-xl font-bold text-blue-600 hover:text-blue-700 transition">
-            <Store size={28} />
+            <img
+              src={`${import.meta.env.BASE_URL}logo.svg`}
+              alt="Tech Store"
+              className="w-8 h-8"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+              }}
+            />
             <span className="hidden sm:inline">Tech Store</span>
           </Link>
 

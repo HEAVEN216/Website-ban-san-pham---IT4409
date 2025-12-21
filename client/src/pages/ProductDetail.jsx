@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { ShoppingCart, Star, Package, Truck, Shield, ArrowLeft, Minus, Plus, User, MessageSquare, Send } from "lucide-react";
 import CustomerNavbar from "../components/CustomerNavbar";
-import { productService, cartService, reviewService } from "../services";
+import { productService, reviewService, cartService } from "../services";
+import { emitCartUpdated } from "../utils/cartEvents";
 import { useAuth } from "../contexts/AuthContext";
 
 const ProductDetail = () => {
@@ -147,6 +148,10 @@ const ProductDetail = () => {
     try {
       const response = await cartService.addItem(product._id, quantity);
       if (response.success) {
+        const totalItems = response.data?.cart?.totalItems ??
+          response.data?.cart?.items?.reduce((sum, item) => sum + (item.quantity || 0), 0) ??
+          0;
+        emitCartUpdated(totalItems);
         alert("Đã thêm sản phẩm vào giỏ hàng!");
         setQuantity(1);
       }
@@ -166,8 +171,9 @@ const ProductDetail = () => {
   };
 
   const averageRating = (() => {
-    if (typeof product?.ratingsAverage === "number") {
-      return product.ratingsAverage;
+    const productRating = product?.averageRating ?? product?.ratingsAverage;
+    if (typeof productRating === "number") {
+      return productRating;
     }
     if (reviews.length > 0) {
       const sum = reviews.reduce((total, r) => total + (r.rating || 0), 0);
@@ -176,7 +182,7 @@ const ProductDetail = () => {
     return 0;
   })();
 
-  const ratingsCount = product?.ratingsQuantity ?? reviews.length;
+  const ratingsCount = product?.numReviews ?? product?.ratingsQuantity ?? reviews.length;
 
   if (loading) {
     return (

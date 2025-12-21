@@ -16,7 +16,17 @@ const Sidebar = () => {
   return (
     <div className="bg-white border-r border-gray-200 h-screen w-64 p-6 hidden md:flex flex-col justify-between">
       <div>
-        <h1 className="text-2xl font-bold text-blue-600 mb-10">TechStore Admin</h1>
+        <div className="flex items-center gap-2 mb-10">
+          <img
+            src={`${import.meta.env.BASE_URL}logo.svg`}
+            alt="TechStore"
+            className="w-8 h-8"
+            onError={(e) => {
+              e.currentTarget.style.display = 'none';
+            }}
+          />
+          <h1 className="text-2xl font-bold text-blue-600">TechStore Admin</h1>
+        </div>
         <ul className="space-y-4">
           {menuItems.map((item, index) => (
             <li key={index}>

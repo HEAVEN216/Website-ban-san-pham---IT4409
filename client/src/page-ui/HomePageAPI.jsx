@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { ShoppingCart, Heart, Star, Package, TrendingUp, Zap, Phone, Mail, MapPin, Facebook, Youtube, MessageCircle } from "lucide-react";
 import CustomerNavbar from "../components/CustomerNavbar";
 import { productService, categoryService, cartService } from "../services";
+import { emitCartUpdated } from "../utils/cartEvents";
 import { useAuth } from "../contexts/AuthContext";
 
 const HomePage = () => {
@@ -87,6 +88,10 @@ const HomePage = () => {
     try {
       const response = await cartService.addItem(product._id, 1);
       if (response.success) {
+        const totalItems = response.data?.cart?.totalItems ??
+          response.data?.cart?.items?.reduce((sum, item) => sum + (item.quantity || 0), 0) ??
+          0;
+        emitCartUpdated(totalItems);
         alert(`Đã thêm "${product.name}" vào giỏ hàng!`);
       }
     } catch (err) {
@@ -156,8 +161,22 @@ const HomePage = () => {
                 to={`/category/${cat.slug}`}
                 className="group bg-white rounded-xl shadow-md p-6 text-center hover:shadow-xl transition-all transform hover:-translate-y-1"
               >
-                <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white text-2xl font-bold group-hover:scale-110 transition-transform">
-                  {cat.name.charAt(0)}
+                <div className="w-20 h-20 mx-auto mb-4 rounded-2xl overflow-hidden border border-gray-100 bg-gray-100 flex items-center justify-center group-hover:scale-105 transition-transform">
+                  {cat.image ? (
+                    <img
+                      src={cat.image}
+                      alt={cat.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = "https://placehold.co/120x120/3b82f6/ffffff?text=Category";
+                      }}
+                    />
+                  ) : (
+                    <span className="text-2xl font-semibold text-blue-600">
+                      {cat.name.charAt(0)}
+                    </span>
+                  )}
                 </div>
                 <h3 className="font-semibold text-gray-800 mb-2">{cat.name}</h3>
                 <p className="text-sm text-gray-500">{cat.description || 'Khám phá ngay'}</p>
@@ -217,10 +236,10 @@ const HomePage = () => {
                     </Link>
 
                     <div className="flex items-center gap-2 mb-3">
-                      {renderStars(product.ratingsAverage || 0)}
-                      {product.ratingsQuantity > 0 ? (
+                      {renderStars(product.averageRating ?? product.ratingsAverage ?? 0)}
+                      {(product.numReviews ?? product.ratingsQuantity ?? 0) > 0 ? (
                         <span className="text-xs text-gray-500">
-                          {Number(product.ratingsAverage || 0).toFixed(1)} ({product.ratingsQuantity})
+                          {Number(product.averageRating ?? product.ratingsAverage ?? 0).toFixed(1)} ({product.numReviews ?? product.ratingsQuantity ?? 0})
                         </span>
                       ) : (
                         <span className="text-xs text-gray-500">Chưa có đánh giá</span>

@@ -9,6 +9,45 @@ const { uploadToCloudinary, uploadMultiple, deleteFromCloudinary } = require('..
 const fs = require('fs');
 const path = require('path');
 
+const UPLOAD_DRIVER = (
+  process.env.UPLOAD_DRIVER || (process.env.NODE_ENV === 'production' ? 'cloudinary' : 'local')
+).toLowerCase();
+
+const uploadsRootDir = path.join(__dirname, '..', 'uploads');
+const productUploadsDir = path.join(uploadsRootDir, 'products');
+fs.mkdirSync(productUploadsDir, { recursive: true });
+
+const hasCloudinaryConfig = () =>
+  Boolean(process.env.CLOUDINARY_URL) ||
+  Boolean(
+    process.env.CLOUDINARY_CLOUD_NAME &&
+      process.env.CLOUDINARY_API_KEY &&
+      process.env.CLOUDINARY_API_SECRET
+  );
+
+const buildBaseUrl = (req) => `${req.protocol}://${req.get('host')}`;
+
+const getPathnameFromUrl = (value) => {
+  try {
+    return new URL(value).pathname;
+  } catch {
+    return value;
+  }
+};
+
+const isLocalUploadUrl = (value) => {
+  if (!value || typeof value !== 'string') return false;
+  const pathname = getPathnameFromUrl(value);
+  return typeof pathname === 'string' && pathname.startsWith('/uploads/');
+};
+
+const getLocalFilePathFromUrl = (value) => {
+  const pathname = getPathnameFromUrl(value);
+  if (!pathname || typeof pathname !== 'string' || !pathname.startsWith('/uploads/')) return null;
+  const relPath = pathname.replace(/^\/+/, '');
+  return path.join(__dirname, '..', relPath);
+};
+
 /**
  * Lấy danh sách sản phẩm với filter, sort, pagination
  * GET /api/products
@@ -255,23 +294,37 @@ const uploadProductImages = catchAsync(async (req, res, next) => {
   }
 
   try {
-    // Upload to Cloudinary
-    const uploadResults = await uploadMultiple(req.files, 'products');
+    let newImages = [];
+    let publicIds = [];
 
-    // Extract URLs and publicIds
-    const newImages = uploadResults.map(result => result.url);
-    const publicIds = uploadResults.map(result => result.publicId);
+    if (UPLOAD_DRIVER === 'cloudinary') {
+      if (!hasCloudinaryConfig()) {
+        throw new Error('Cloudinary is not configured');
+      }
+
+      const uploadResults = await uploadMultiple(req.files, 'products');
+      newImages = uploadResults.map(result => result.url);
+      publicIds = uploadResults.map(result => result.publicId);
+
+      req.files.forEach(file => {
+        if (fs.existsSync(file.path)) {
+          fs.unlinkSync(file.path);
+        }
+      });
+    } else {
+      const baseUrl = buildBaseUrl(req);
+      req.files.forEach(file => {
+        const filename = path.basename(file.path);
+        const destPath = path.join(productUploadsDir, filename);
+        fs.renameSync(file.path, destPath);
+        newImages.push(`${baseUrl}/uploads/products/${filename}`);
+        publicIds.push(`products/${filename}`);
+      });
+    }
 
     // Add to product images array
-    product.images = [...product.images, ...newImages];
+    product.images = [...newImages, ...product.images];
     await product.save();
-
-    // Clean up temp files
-    req.files.forEach(file => {
-      if (fs.existsSync(file.path)) {
-        fs.unlinkSync(file.path);
-      }
-    });
 
     res.status(200).json(
       ApiResponse.success(
@@ -366,8 +419,30 @@ const deleteProductImage = catchAsync(async (req, res, next) => {
   }
 
   try {
-    // Delete from Cloudinary
-    await deleteFromCloudinary(actualPublicId);
+    if (isLocalUploadUrl(imageUrl)) {
+      const filePath = getLocalFilePathFromUrl(imageUrl);
+      if (filePath && fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+
+      product.images = product.images.filter(img => img !== imageUrl);
+      await product.save();
+
+      res.status(200).json(
+        ApiResponse.success(
+          {
+            deletedImage: imageUrl,
+            remainingImages: product.images.length
+          },
+          'Image deleted successfully'
+        )
+      );
+      return;
+    }
+
+    if (imageUrl.includes('cloudinary.com') && hasCloudinaryConfig()) {
+      await deleteFromCloudinary(actualPublicId);
+    }
 
     // Remove from product images array
     product.images = product.images.filter(img => img !== imageUrl);

@@ -29,11 +29,22 @@ const ProductsPage = () => {
   });
   const [formError, setFormError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [imageFiles, setImageFiles] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState([]);
 
   useEffect(() => {
     fetchProducts();
     fetchCategories();
   }, [currentPage, search]);
+
+  useEffect(() => {
+    const urls = imageFiles.map((file) => URL.createObjectURL(file));
+    setImagePreviews(urls);
+
+    return () => {
+      urls.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [imageFiles]);
 
   const fetchProducts = async () => {
     try {
@@ -79,6 +90,7 @@ const ProductsPage = () => {
       specifications: {},
       images: []
     });
+    setImageFiles([]);
     setIsEditing(false);
     setFormError("");
     setIsFormVisible(true);
@@ -97,6 +109,7 @@ const ProductsPage = () => {
       specifications: product.specifications || {},
       images: product.images || []
     });
+    setImageFiles([]);
     setIsEditing(true);
     setFormError("");
     setIsFormVisible(true);
@@ -147,21 +160,32 @@ const ProductsPage = () => {
     }
 
     try {
+      let productId = formData._id;
+
       if (isEditing) {
         const response = await productService.updateProduct(formData._id, formData);
         if (response.success) {
-          setProducts((prev) =>
-            prev.map((p) => (p._id === formData._id ? response.data.product : p))
-          );
-          alert("Cập nhật sản phẩm thành công!");
+          productId = response.data.product?._id || formData._id;
         }
       } else {
-        const response = await productService.createProduct(formData);
+        const response = await productService.createProduct({
+          ...formData,
+          images: []
+        });
         if (response.success) {
-          fetchProducts(); // Reload to get fresh data
-          alert("Thêm sản phẩm thành công!");
+          productId = response.data.product?._id;
         }
       }
+
+      if (productId && imageFiles.length > 0) {
+        const uploadResponse = await productService.uploadImages(productId, imageFiles.slice(0, 10));
+        if (!uploadResponse.success) {
+          throw new Error(uploadResponse.message || 'Upload ảnh thất bại');
+        }
+      }
+
+      await fetchProducts();
+      alert(isEditing ? "Cập nhật sản phẩm thành công!" : "Thêm sản phẩm thành công!");
       setIsFormVisible(false);
       setFormData({
         name: "",
@@ -174,6 +198,7 @@ const ProductsPage = () => {
         specifications: {},
         images: []
       });
+      setImageFiles([]);
     } catch (err) {
       setFormError(err.response?.data?.message || "Có lỗi xảy ra");
     } finally {
@@ -184,6 +209,46 @@ const ProductsPage = () => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleImageFilesChange = (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    if (files.length > 10) {
+      setFormError('Tối đa 10 ảnh mỗi lần upload');
+      setImageFiles(files.slice(0, 10));
+    } else {
+      setImageFiles(files);
+    }
+  };
+
+  const handleRemoveNewImage = (index) => {
+    setImageFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleDeleteExistingImage = async (imageUrl) => {
+    if (!isEditing || !formData._id) return;
+    if (!window.confirm('Xóa ảnh này?')) return;
+
+    try {
+      const response = await productService.deleteImage(formData._id, imageUrl);
+      if (response.success) {
+        setFormData((prev) => ({
+          ...prev,
+          images: (prev.images || []).filter((img) => img !== imageUrl)
+        }));
+        setProducts((prev) =>
+          prev.map((p) =>
+            p._id === formData._id
+              ? { ...p, images: (p.images || []).filter((img) => img !== imageUrl) }
+              : p
+          )
+        );
+      }
+    } catch (err) {
+      alert('Lỗi khi xóa ảnh: ' + (err.response?.data?.message || err.message));
+    }
   };
 
   const formatPrice = (price) => {
@@ -531,10 +596,73 @@ const ProductsPage = () => {
                 />
               </div>
 
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Hình ảnh sản phẩm
+                </label>
+
+                <div className="space-y-3">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleImageFilesChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900"
+                  />
+
+                  {isEditing && formData.images && formData.images.length > 0 && (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {formData.images.map((img) => (
+                        <div key={img} className="relative group rounded-lg overflow-hidden border border-gray-200">
+                          <img
+                            src={img}
+                            alt="Product"
+                            className="w-full h-24 object-cover"
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = "https://placehold.co/200x200/3b82f6/ffffff?text=IMG";
+                            }}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteExistingImage(img)}
+                            className="absolute top-1 right-1 bg-white/90 hover:bg-white text-red-600 rounded-full p-1 shadow"
+                            title="Xóa ảnh"
+                          >
+                            <X size={16} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {imagePreviews.length > 0 && (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {imagePreviews.map((src, index) => (
+                        <div key={src} className="relative group rounded-lg overflow-hidden border border-gray-200">
+                          <img src={src} alt="New" className="w-full h-24 object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveNewImage(index)}
+                            className="absolute top-1 right-1 bg-white/90 hover:bg-white text-red-600 rounded-full p-1 shadow"
+                            title="Bỏ ảnh"
+                          >
+                            <X size={16} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
               <div className="flex justify-end gap-3 pt-4">
                 <button
                   type="button"
-                  onClick={() => setIsFormVisible(false)}
+                  onClick={() => {
+                    setIsFormVisible(false);
+                    setImageFiles([]);
+                  }}
                   className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
                 >
                   Hủy

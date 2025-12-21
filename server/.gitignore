@@ -39,6 +39,8 @@ build/
 *.temp
 .cache/
 
+uploads/
+
 # Test coverage
 coverage/
 .nyc_output/

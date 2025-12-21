@@ -2,11 +2,33 @@
 
 const cloudinary = require('cloudinary').v2;
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET
-});
+const getCloudinaryConfig = () => {
+  const url = process.env.CLOUDINARY_URL;
+  if (url) {
+    try {
+      const parsed = new URL(url);
+      return {
+        cloud_name: parsed.hostname,
+        api_key: decodeURIComponent(parsed.username),
+        api_secret: decodeURIComponent(parsed.password)
+      };
+    } catch {
+      return {
+        cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+        api_key: process.env.CLOUDINARY_API_KEY,
+        api_secret: process.env.CLOUDINARY_API_SECRET
+      };
+    }
+  }
+
+  return {
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+  };
+};
+
+cloudinary.config(getCloudinaryConfig());
 
 const uploadToCloudinary = async (file, folder = 'products') => {
   try {

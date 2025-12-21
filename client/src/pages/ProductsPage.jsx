@@ -68,8 +68,9 @@ const ProductsPage = () => {
 
       const response = await productService.getProducts(params);
       if (response.success) {
-        setProducts(response.data.products || []);
-        setTotalPages(response.data.totalPages || 1);
+        const { products: fetchedProducts = [], pagination } = response.data || {};
+        setProducts(fetchedProducts);
+        setTotalPages(pagination?.totalPages || 1);
       }
     } catch (err) {
       console.error('Error fetching products:', err);
@@ -166,7 +167,7 @@ const ProductsPage = () => {
               <option value="-createdAt">Mới nhất</option>
               <option value="price">Giá thấp → cao</option>
               <option value="-price">Giá cao → thấp</option>
-              <option value="-ratingsAverage">Đánh giá cao</option>
+              <option value="-averageRating">Đánh giá cao</option>
               <option value="-sold">Bán chạy</option>
             </select>
 
@@ -220,6 +221,9 @@ const ProductsPage = () => {
                   product.discount || 0
                 );
 
+                const ratingValue = product?.averageRating ?? product?.ratingsAverage ?? 0;
+                const reviewCount = product?.numReviews ?? product?.ratingsQuantity ?? 0;
+
                 return (
                   <Link
                     key={product._id}
@@ -262,11 +266,10 @@ const ProductsPage = () => {
                         {product.name}
                       </h3>
 
-                      <div className="flex items-center gap-2 mb-2">
-                        {renderStars(product.ratingsAverage || 0)}
-                        <span className="text-xs text-gray-500">
-                          ({product.ratingsQuantity || 0})
-                        </span>
+                      <div className="flex items-center gap-2 mb-2 text-xs text-gray-500">
+                        {renderStars(ratingValue)}
+                        <span>{ratingValue ? `${ratingValue.toFixed(1)}/5` : '0/5'}</span>
+                        <span>({reviewCount})</span>
                       </div>
 
                       <div className="flex items-baseline gap-2 mb-2">

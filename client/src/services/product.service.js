@@ -48,7 +48,8 @@ const productService = {
 
   // Delete product image (admin)
   deleteImage: async (id, publicId) => {
-    const response = await api.delete(`/products/${id}/images/${publicId}`);
+    const encoded = encodeURIComponent(publicId);
+    const response = await api.delete(`/products/${id}/images/${encoded}`);
     return response.data;
   }
 };

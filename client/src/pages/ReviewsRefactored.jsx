@@ -36,7 +36,7 @@ const ReviewsRefactored = () => {
       setLoading(true);
       const response = await productService.getProducts({ 
         limit: 50,
-        sort: '-ratingsAverage' 
+        sort: '-averageRating' 
       });
       
       if (response.success) {
@@ -183,34 +183,38 @@ const ReviewsRefactored = () => {
               </h3>
             </div>
             <div className="divide-y divide-gray-200 max-h-[600px] overflow-y-auto">
-              {filteredProducts.map((product) => (
-                <button
-                  key={product._id}
-                  onClick={() => fetchProductReviews(product._id)}
-                  className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition ${
-                    selectedProduct?._id === product._id ? 'bg-blue-50' : ''
-                  }`}
-                >
-                  <div className="flex items-start gap-3">
-                    <img
-                      src={product.images?.[0] || 'https://placehold.co/50x50'}
-                      alt={product.name}
-                      className="w-12 h-12 rounded object-cover"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-gray-900 text-sm line-clamp-2">
-                        {product.name}
-                      </div>
-                      <div className="flex items-center gap-2 mt-1">
-                        {renderStars(product.ratingsAverage || 0)}
-                        <span className="text-xs text-gray-500">
-                          ({product.ratingsQuantity || 0})
-                        </span>
+              {filteredProducts.map((product) => {
+                const ratingValue = product?.averageRating ?? product?.ratingsAverage ?? 0;
+                const reviewCount = product?.numReviews ?? product?.ratingsQuantity ?? 0;
+
+                return (
+                  <button
+                    key={product._id}
+                    onClick={() => fetchProductReviews(product._id)}
+                    className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition ${
+                      selectedProduct?._id === product._id ? 'bg-blue-50' : ''
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <img
+                        src={product.images?.[0] || 'https://placehold.co/50x50'}
+                        alt={product.name}
+                        className="w-12 h-12 rounded object-cover"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-gray-900 text-sm line-clamp-2">
+                          {product.name}
+                        </div>
+                        <div className="flex items-center gap-2 mt-1 text-xs text-gray-500">
+                          {renderStars(ratingValue)}
+                          <span>{ratingValue ? `${ratingValue.toFixed(1)}/5` : '0/5'}</span>
+                          <span>({reviewCount})</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </button>
-              ))}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>

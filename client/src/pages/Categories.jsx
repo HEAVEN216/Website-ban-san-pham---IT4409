@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from "react";
-import { Folder, FolderOpen, Plus, Pencil, Trash2, Search, X, ChevronRight, ChevronDown } from "lucide-react";
-import { categoryService } from "../services";
+  import React, { useState, useEffect } from "react";
+import { Folder, FolderOpen, Plus, Pencil, Trash2, Search, X, ChevronRight, ChevronDown, Image as ImageIcon } from "lucide-react";
+import { categoryService, uploadService } from "../services";
 
 const CategoriesPage = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [error, setError] = useState("");
+  const [uploading, setUploading] = useState(false);
   
   // Form states
   const [isFormVisible, setIsFormVisible] = useState(false);
@@ -15,7 +16,8 @@ const CategoriesPage = () => {
     name: "",
     description: "",
     parent: "",
-    level: 1
+    level: 1,
+    image: ""
   });
   const [saving, setSaving] = useState(false);
 
@@ -42,12 +44,34 @@ const CategoriesPage = () => {
     }
   };
 
+  const handleImageUpload = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const response = await uploadService.uploadCategoryImage(file);
+      if (response.success) {
+        setFormData((prev) => ({
+          ...prev,
+          image: response.data.image.url
+        }));
+      }
+    } catch (err) {
+      alert("Upload ảnh thất bại: " + (err.response?.data?.message || err.message));
+    } finally {
+      setUploading(false);
+      event.target.value = '';
+    }
+  };
+
   const handleCreate = () => {
     setFormData({
       name: "",
       description: "",
       parent: "",
-      level: 1
+      level: 1,
+      image: ""
     });
     setIsEditing(false);
     setIsFormVisible(true);
@@ -59,6 +83,7 @@ const CategoriesPage = () => {
       description: category.description || "",
       parent: category.parent || "",
       level: category.level || 1,
+      image: category.image || "",
       _id: category._id
     });
     setIsEditing(true);
@@ -78,7 +103,8 @@ const CategoriesPage = () => {
       const submitData = {
         name: formData.name.trim(),
         description: formData.description.trim(),
-        level: parseInt(formData.level) || 1
+        level: parseInt(formData.level) || 1,
+        image: formData.image || undefined
       };
 
       if (formData.parent) {
@@ -168,7 +194,7 @@ const CategoriesPage = () => {
     return (
       <div key={node._id} className="mb-1">
         <div 
-          className={`flex items-center gap-2 p-3 rounded-lg hover:bg-gray-50 transition group ${
+          className={`flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition group ${
             level > 0 ? 'ml-' + (level * 6) : ''
           }`}
           style={{ marginLeft: level > 0 ? `${level * 1.5}rem` : '0' }}
@@ -185,12 +211,20 @@ const CategoriesPage = () => {
             )}
           </button>
 
-          {/* Icon */}
+          {/* Icon/Image */}
           <div className="flex-shrink-0">
-            {hasChildren ? (
+            {node.image ? (
+              <img
+                src={node.image}
+                alt={node.name}
+                className="w-10 h-10 rounded-full object-cover border border-gray-200"
+              />
+            ) : hasChildren ? (
               isExpanded ? <FolderOpen className="text-blue-500" size={20} /> : <Folder className="text-blue-500" size={20} />
             ) : (
-              <Folder className="text-gray-400" size={20} />
+              <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 text-sm font-semibold">
+                {node.name?.charAt(0).toUpperCase()}
+              </div>
             )}
           </div>
 
@@ -380,6 +414,30 @@ const CategoriesPage = () => {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Ảnh danh mục
+                  </label>
+                  <div className="flex items-center gap-4">
+                    <div className="w-20 h-20 rounded-lg border border-dashed border-gray-300 flex items-center justify-center overflow-hidden bg-gray-50">
+                      {formData.image ? (
+                        <img src={formData.image} alt="Category" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="flex flex-col items-center text-gray-400 text-xs gap-1">
+                          <ImageIcon size={18} />
+                          <span>Chưa có ảnh</span>
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <label className="inline-flex items-center gap-2 px-3 py-2 bg-blue-50 text-blue-600 rounded-lg border border-blue-200 cursor-pointer hover:bg-blue-100 text-sm font-medium">
+                        <ImageIcon size={16} />
+                        {uploading ? 'Đang upload...' : 'Chọn ảnh'}
+                        <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} disabled={uploading} />
+                      </label>
+                    </div>
+                  </div>
+                </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Danh mục cha

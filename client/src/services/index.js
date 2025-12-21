@@ -8,3 +8,4 @@ export { default as userService } from './user.service';
 export { default as adminService } from './admin.service';
 export { default as couponService } from './coupon.service';
 export { default as reviewService } from './review.service';
+export { default as uploadService } from './upload.service';

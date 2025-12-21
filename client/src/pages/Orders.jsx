@@ -62,10 +62,12 @@ const OrdersPage = () => {
     
     setUpdating(true);
     try {
+      const trimmedReason = updateReason?.trim();
+      const payloadReason = trimmedReason && trimmedReason.length >= 5 ? trimmedReason : undefined;
       const response = await orderService.updateOrderStatus(
         selectedOrder._id, 
         newStatus, 
-        updateReason
+        payloadReason
       );
       
       if (response.success) {
@@ -523,12 +525,13 @@ const OrdersPage = () => {
                   onChange={(e) => setNewStatus(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
                 >
+                  <option value="pending">Chờ xử lý</option>
                   <option value="processing">Đang xử lý</option>
                   <option value="completed">Hoàn thành</option>
                   <option value="cancelled">Đã hủy</option>
                 </select>
                 <p className="mt-1 text-xs text-gray-500">
-                  Chỉ có thể cập nhật sang: Đang xử lý, Hoàn thành, Đã hủy
+                  Có thể chuyển sang: Chờ xử lý, Đang xử lý, Hoàn thành, Đã hủy
                 </p>
               </div>
 

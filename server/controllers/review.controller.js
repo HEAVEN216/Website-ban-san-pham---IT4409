@@ -1,6 +1,6 @@
 'use strict';
 
-const { Review, Product, Order, OrderItem } = require('../models');
+const { Review, Product } = require('../models');
 const ApiError = require('../utils/ApiError');
 const ApiResponse = require('../utils/ApiResponse');
 const catchAsync = require('../utils/catchAsync');
@@ -60,24 +60,6 @@ const createReview = catchAsync(async (req, res, next) => {
   const product = await Product.findOne({ _id: productId, isDeleted: false });
   if (!product) {
     throw ApiError.notFound('Product not found');
-  }
-
-  // Kiểm tra user đã review sản phẩm này chưa
-  const existingReview = await Review.findOne({
-    product: productId,
-    user: userId,
-    isDeleted: false
-  });
-
-  if (existingReview) {
-    throw ApiError.conflict('You have already reviewed this product');
-  }
-
-  // Kiểm tra user đã mua hàng chưa (verified purchase)
-  const isVerifiedPurchase = await Review.checkVerifiedPurchase(userId, productId);
-
-  if (!isVerifiedPurchase) {
-    throw ApiError.forbidden('You can only review products you have purchased');
   }
 
   // Tạo review
