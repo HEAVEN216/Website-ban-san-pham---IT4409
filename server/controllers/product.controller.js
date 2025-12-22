@@ -53,17 +53,17 @@ const getLocalFilePathFromUrl = (value) => {
  * GET /api/products
  */
 const getProducts = catchAsync(async (req, res, next) => {
-  const { q, category, minPrice, maxPrice, sort, page, limit } = req.query;
+  const { q, search, category, minPrice, maxPrice, sort, page, limit } = req.query;
 
   // Build query
   const query = { isDeleted: false };
 
   // Search by query string (q)
-  if (q) {
+  const searchTerm = (search || q || '').trim();
+  if (searchTerm) {
     query.$or = [
-      { name: { $regex: q, $options: 'i' } },
-      { description: { $regex: q, $options: 'i' } },
-      { brand: { $regex: q, $options: 'i' } }
+      { name: { $regex: searchTerm, $options: 'i' } },
+      { brand: { $regex: searchTerm, $options: 'i' } }
     ];
   }
 
