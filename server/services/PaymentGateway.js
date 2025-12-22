@@ -1,8 +1,7 @@
 'use strict';
 
 const PaymentGatewayMock = require('./PaymentGatewayMock');
-const VNPayGateway = require('./VNPayGateway');
-const MoMoGateway = require('./MoMoGateway');
+const PayOSGateway = require('./PayOSGateway');
 
 const MODE = (process.env.PAYMENT_GATEWAY_MODE || 'mock').toLowerCase();
 
@@ -17,12 +16,8 @@ async function createIntent({ orderNumber, amount, method }) {
 
   const m = String(method || '').toLowerCase();
 
-  if (m === 'vnpay') {
-    return VNPayGateway.createIntent({ orderNumber, amount });
-  }
-
-  if (m === 'momo') {
-    return MoMoGateway.createIntent({ orderNumber, amount });
+  if (m === 'payos') {
+    return PayOSGateway.createIntent({ orderNumber, amount });
   }
 
   // Fallback to mock if method is unknown
@@ -36,12 +31,8 @@ async function verifyReturn(provider, query) {
 
   const p = String(provider || '').toLowerCase();
 
-  if (p === 'vnpay') {
-    return VNPayGateway.verifyReturn(query);
-  }
-
-  if (p === 'momo') {
-    return MoMoGateway.verifyReturn(query);
+  if (p === 'payos') {
+    return PayOSGateway.verifyReturn(query);
   }
 
   return PaymentGatewayMock.verifyReturn(query);
@@ -54,12 +45,8 @@ async function verifyWebhook(provider, payload) {
 
   const p = String(provider || '').toLowerCase();
 
-  if (p === 'vnpay') {
-    return VNPayGateway.verifyIPN(payload);
-  }
-
-  if (p === 'momo') {
-    return MoMoGateway.verifyIPN(payload);
+  if (p === 'payos') {
+    return PayOSGateway.verifyWebhook(payload);
   }
 
   return PaymentGatewayMock.verifyWebhook(payload);

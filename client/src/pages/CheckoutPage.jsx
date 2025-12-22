@@ -153,7 +153,15 @@ const CheckoutPage = () => {
       const response = await orderService.createOrder(orderData);
       
       if (response.success) {
+        const paymentIntent = response.data?.paymentIntent;
         setShowConfirmModal(false);
+
+        if (paymentMethod === 'payos' && paymentIntent?.redirectUrl) {
+          alert("Đang chuyển hướng đến PayOS để thanh toán...");
+          window.location.href = paymentIntent.redirectUrl;
+          return;
+        }
+
         alert("✅ Đặt hàng thành công! Cảm ơn bạn đã mua hàng.");
         navigate("/orders");
       }
@@ -313,37 +321,19 @@ const CheckoutPage = () => {
                 </label>
 
                 <label className={`block p-4 border-2 rounded-lg cursor-pointer transition ${
-                  paymentMethod === 'momo' ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+                  paymentMethod === 'payos' ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover-border-gray-300'
                 }`}>
                   <div className="flex items-center gap-3">
                     <input
                       type="radio"
                       name="payment"
-                      value="momo"
-                      checked={paymentMethod === 'momo'}
+                      value="payos"
+                      checked={paymentMethod === 'payos'}
                       onChange={(e) => setPaymentMethod(e.target.value)}
                     />
                     <div className="flex-1">
-                      <p className="font-semibold text-gray-900">Ví MoMo</p>
-                      <p className="text-sm text-gray-600">Thanh toán qua ví điện tử MoMo</p>
-                    </div>
-                  </div>
-                </label>
-
-                <label className={`block p-4 border-2 rounded-lg cursor-pointer transition ${
-                  paymentMethod === 'vnpay' ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
-                }`}>
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="radio"
-                      name="payment"
-                      value="vnpay"
-                      checked={paymentMethod === 'vnpay'}
-                      onChange={(e) => setPaymentMethod(e.target.value)}
-                    />
-                    <div className="flex-1">
-                      <p className="font-semibold text-gray-900">VNPay</p>
-                      <p className="text-sm text-gray-600">Thanh toán qua cổng VNPay</p>
+                      <p className="font-semibold text-gray-900">Thanh toán qua PayOS</p>
+                      <p className="text-sm text-gray-600">Thanh toán trực tuyến qua PayOS (mã QR/Bank)</p>
                     </div>
                   </div>
                 </label>

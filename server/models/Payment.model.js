@@ -11,7 +11,7 @@ const paymentSchema = new mongoose.Schema({
   },
   method: {
     type: String,
-    enum: ['COD', 'credit_card', 'bank_transfer', 'vnpay', 'momo'],
+    enum: ['COD', 'cod', 'payos'],
     required: true
   },
   amount: {

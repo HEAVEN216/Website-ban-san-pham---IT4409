@@ -31,7 +31,8 @@ async function createIntentForOrder({ orderId, method }) {
       method: normMethod,
       amount: order.totalAmount,
       status: PAYMENT_STATUS.PENDING,
-      transactionCode: intent.transactionCode
+      transactionCode: intent.transactionCode,
+      gatewayResponse: intent.rawResponse || undefined
     },
     { new: true, upsert: true }
   );

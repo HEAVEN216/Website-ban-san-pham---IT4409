@@ -10,6 +10,7 @@ import ProductDetail from "./pages/ProductDetail";
 import CartPage from "./pages/CartPage";
 import CheckoutPage from "./pages/CheckoutPage";
 import OrderHistory from "./pages/OrderHistory";
+import PaymentResult from "./pages/PaymentResult";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 // Root App
@@ -49,6 +50,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <OrderHistory />
+              </ProtectedRoute>
+            }
+          />
+          <Route 
+            path="/payment-result" 
+            element={
+              <ProtectedRoute>
+                <PaymentResult />
               </ProtectedRoute>
             }
           />
