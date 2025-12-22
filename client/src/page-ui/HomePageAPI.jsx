@@ -106,16 +106,38 @@ const HomePage = () => {
       <CustomerNavbar />
       
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white">
-        <div className="container mx-auto px-4 py-20">
-          <div className="max-w-3xl">
-            <h1 className="text-5xl md:text-6xl font-bold mb-6 animate-fade-in">
+      <section className="relative overflow-hidden text-white bg-gradient-to-r from-[#1d4ed8] via-[#5b21b6] to-[#a855f7]">
+        <div
+          className="absolute inset-0 opacity-70"
+          style={{
+            backgroundImage:
+              'radial-gradient(circle at 15% 20%, rgba(255,255,255,0.25), transparent 45%), radial-gradient(circle at 85% 10%, rgba(255,255,255,0.2), transparent 40%)'
+          }}
+        />
+        <div
+          className="absolute inset-0 opacity-15"
+          style={{
+            backgroundImage:
+              'linear-gradient(90deg, rgba(255,255,255,0.18) 1px, transparent 1px), linear-gradient(0deg, rgba(255,255,255,0.18) 1px, transparent 1px)',
+            backgroundSize: '70px 70px'
+          }}
+        />
+        <div className="absolute -right-32 top-10 w-80 h-80 bg-pink-400/40 rounded-full blur-[120px] animate-pulse" />
+        <div className="absolute -left-24 bottom-0 w-72 h-72 bg-cyan-400/40 rounded-full blur-[140px] animate-[pulse_6s_ease-in-out_infinite]" />
+        <div className="absolute right-1/3 -bottom-16 w-44 h-44 border border-white/30 rounded-full opacity-30 animate-spin-slow" />
+
+        <div className="container relative mx-auto px-4 py-16 sm:py-20 lg:py-24">
+          <div className="max-w-3xl mx-auto md:mx-0 text-center md:text-left animate-fade-in">
+            <p className="uppercase tracking-[0.4em] text-sm text-blue-100/90 mb-6">
+              Tech Store IT4409
+            </p>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
               Chào mừng đến với<br />Tech Store IT4409
             </h1>
             <p className="text-xl md:text-2xl mb-8 text-blue-100">
               Sản phẩm công nghệ chính hãng • Giá tốt nhất • Giao hàng nhanh
             </p>
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
               <Link
                 to="/products"
                 className="inline-flex items-center gap-2 bg-white text-blue-600 px-8 py-4 rounded-lg font-semibold hover:bg-gray-100 transition-all transform hover:scale-105 shadow-lg"
