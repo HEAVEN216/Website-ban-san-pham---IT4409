@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { ShoppingCart, Trash2, Plus, Minus, ArrowLeft, Tag, X, ShoppingBag } from "lucide-react";
 import CustomerNavbar from "../components/CustomerNavbar";
 import { cartService, couponService } from "../services";
+import { emitCartUpdated } from "../utils/cartEvents";
 import { useAuth } from "../contexts/AuthContext";
 
 const CartPage = () => {
@@ -59,6 +60,7 @@ const CartPage = () => {
       const response = await cartService.updateItem(productId, newQuantity);
       if (response.success) {
         fetchCart();
+        emitCartUpdated(response.data?.cart?.totalItems ?? 0);
       }
     } catch (err) {
       const message = err.response?.data?.message || err.message;
@@ -74,6 +76,7 @@ const CartPage = () => {
         const response = await cartService.removeItem(productId);
         if (response.success) {
           fetchCart();
+          emitCartUpdated(response.data?.cart?.totalItems ?? 0);
           alert("Đã xóa sản phẩm khỏi giỏ hàng!");
         }
       } catch (err) {
@@ -88,6 +91,7 @@ const CartPage = () => {
         const response = await cartService.clearCart();
         if (response.success) {
           fetchCart();
+          emitCartUpdated(0);
           alert("Đã xóa tất cả sản phẩm!");
         }
       } catch (err) {

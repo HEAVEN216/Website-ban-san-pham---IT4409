@@ -153,8 +153,18 @@ const ProductsPage = () => {
       setSubmitting(false);
       return;
     }
+    if (!formData.description || formData.description.trim().length < 10) {
+      setFormError("Mô tả sản phẩm phải có ít nhất 10 ký tự");
+      setSubmitting(false);
+      return;
+    }
     if (!formData.category) {
       setFormError("Vui lòng chọn danh mục");
+      setSubmitting(false);
+      return;
+    }
+    if (Number(formData.discount) < 0 || Number(formData.discount) > 100) {
+      setFormError("Giảm giá phải nằm trong khoảng 0 - 100%");
       setSubmitting(false);
       return;
     }
@@ -200,7 +210,8 @@ const ProductsPage = () => {
       });
       setImageFiles([]);
     } catch (err) {
-      setFormError(err.response?.data?.message || "Có lỗi xảy ra");
+      const backendError = err.response?.data?.data?.[0]?.message;
+      setFormError(backendError || err.response?.data?.message || "Có lỗi xảy ra");
     } finally {
       setSubmitting(false);
     }

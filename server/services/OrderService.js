@@ -1,11 +1,10 @@
 'use strict';
 
 const mongoose = require('mongoose');
-const { Cart, Product, Order, OrderItem } = require('../models');
+const { Cart, Product, Order, OrderItem, Coupon } = require('../models');
 const { ORDER_STATUS, DEFAULT_SHIPPING_FEE, DEFAULT_TAX_RATE } = require('../constants/orders');
 const { PAYMENT_METHOD } = require('../constants/payments');
 const ApiError = require('../utils/ApiError');
-const CouponService = require('./CouponService');
 
 async function createFromCart(userId, { shippingAddress, paymentMethod, couponCode, note }) {
   if (!userId) throw ApiError.badRequest('Missing user');
@@ -44,10 +43,29 @@ async function createFromCart(userId, { shippingAddress, paymentMethod, couponCo
     // Coupon
     let discountAmount = 0;
     let shippingFee = DEFAULT_SHIPPING_FEE;
-    const coupon = await CouponService.validate(couponCode, { userId, subtotal });
-    if (coupon.valid) {
-      discountAmount = Math.round(coupon.discountAmount || 0);
-      if (coupon.code === 'FREESHIP') shippingFee = 0;
+
+    if (couponCode) {
+      const coupon = await Coupon.findOne({
+        code: couponCode.trim().toUpperCase(),
+        isDeleted: false
+      });
+
+      if (!coupon) {
+        throw ApiError.badRequest('Coupon not found');
+      }
+
+      const productIds = cart.items.map(ci => ci.product._id);
+      const validation = await coupon.isValid(userId, subtotal, productIds);
+
+      if (!validation.valid) {
+        throw ApiError.badRequest(validation.message || 'Coupon is not valid');
+      }
+
+      discountAmount = coupon.calculateDiscount(subtotal);
+
+      if (coupon.code === 'FREESHIP') {
+        shippingFee = 0;
+      }
     }
 
     const taxAmount = Math.round(subtotal * DEFAULT_TAX_RATE);

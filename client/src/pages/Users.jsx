@@ -103,10 +103,9 @@ const UsersPage = () => {
   const getRoleBadge = (role) => {
     const badges = {
       admin: { bg: "bg-red-100", text: "text-red-800", label: "Admin" },
-      staff: { bg: "bg-blue-100", text: "text-blue-800", label: "Staff" },
       customer: { bg: "bg-green-100", text: "text-green-800", label: "Customer" }
     };
-    const badge = badges[role] || badges.customer;
+    const badge = badges[role] || { bg: "bg-gray-100", text: "text-gray-700", label: "Khác" };
     return (
       <span className={`px-2 py-1 rounded-full text-xs font-semibold ${badge.bg} ${badge.text}`}>
         {badge.label}
@@ -175,7 +174,7 @@ const UsersPage = () => {
 
         {/* Role Filter */}
         <div className="flex gap-2">
-          {["all", "customer", "staff", "admin"].map((role) => (
+          {["all", "customer", "admin"].map((role) => (
             <button
               key={role}
               onClick={() => handleFilterChange(role)}
@@ -185,7 +184,7 @@ const UsersPage = () => {
                   : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
               }`}
             >
-              {role === "all" ? "Tất cả" : role === "customer" ? "Khách hàng" : role === "staff" ? "Nhân viên" : "Admin"}
+              {role === "all" ? "Tất cả" : role === "customer" ? "Khách hàng" : "Admin"}
             </button>
           ))}
         </div>
@@ -490,7 +489,6 @@ const UsersPage = () => {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
                 >
                   <option value="customer">Customer (Khách hàng)</option>
-                  <option value="staff">Staff (Nhân viên)</option>
                   <option value="admin">Admin (Quản trị viên)</option>
                 </select>
               </div>
