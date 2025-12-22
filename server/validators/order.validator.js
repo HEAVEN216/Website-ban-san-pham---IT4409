@@ -3,7 +3,7 @@
 const { param, query, body } = require('express-validator');
 
 const ORDER_STATUSES = ['pending', 'processing', 'completed', 'cancelled'];
-const ADMIN_UPDATABLE_STATUSES = ['processing', 'completed', 'cancelled'];
+const ADMIN_UPDATABLE_STATUSES = ['pending', 'processing', 'completed', 'cancelled'];
 const PAYMENT_STATUSES = ['pending', 'paid', 'failed', 'refunded'];
 
 const paginationValidators = [

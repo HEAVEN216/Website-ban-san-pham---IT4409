@@ -45,7 +45,6 @@ const reviewSchema = new mongoose.Schema({
 reviewSchema.plugin(toJSON);
 reviewSchema.plugin(softDelete);
 
-reviewSchema.index({ product: 1, user: 1 }, { unique: true });
 reviewSchema.index({ product: 1, createdAt: -1 });
 reviewSchema.index({ user: 1 });
 

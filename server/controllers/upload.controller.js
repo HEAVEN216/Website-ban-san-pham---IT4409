@@ -43,6 +43,41 @@ const uploadImage = catchAsync(async (req, res, next) => {
 });
 
 /**
+ * Upload ảnh danh mục (single)
+ * POST /api/uploads/categories
+ */
+const uploadCategoryImage = catchAsync(async (req, res, next) => {
+  if (!req.file) {
+    throw ApiError.badRequest('No image file provided');
+  }
+
+  try {
+    const result = await uploadToCloudinary(req.file, 'categories');
+
+    if (fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
+
+    res.status(200).json(
+      ApiResponse.success(
+        {
+          image: {
+            url: result.url,
+            publicId: result.publicId
+          }
+        },
+        'Category image uploaded successfully'
+      )
+    );
+  } catch (error) {
+    if (fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
+    throw ApiError.internal(`Failed to upload category image: ${error.message}`);
+  }
+});
+
+/**
  * Upload nhiều ảnh lên Cloudinary
  * POST /api/uploads/images (multiple files)
  */
@@ -118,6 +153,7 @@ const deleteImage = catchAsync(async (req, res, next) => {
 module.exports = {
   uploadImage,
   uploadImages,
+  uploadCategoryImage,
   deleteImage
 };
 

@@ -8,10 +8,11 @@ function genCode(prefix = 'MOCK') {
 }
 
 async function createIntent({ orderNumber, amount, method }) {
-  if (method === 'COD') {
+  if (!method || String(method).toLowerCase() === 'cod') {
     return { gateway: 'cod', amount, redirectUrl: null, transactionCode: null };
   }
-  const code = genCode(method === 'vnpay' ? 'VNP' : method === 'momo' ? 'MOMO' : 'PAY');
+  const prefix = String(method).toLowerCase() === 'payos' ? 'PAYOS' : 'PAY';
+  const code = genCode(prefix);
   const redirectUrl = `https://example.com/mockpay?method=${method}&order=${encodeURIComponent(
     orderNumber
   )}&amount=${amount}&code=${code}`;

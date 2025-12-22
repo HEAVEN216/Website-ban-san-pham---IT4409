@@ -5,6 +5,8 @@ const ApiError = require('../utils/ApiError');
 const ApiResponse = require('../utils/ApiResponse');
 const catchAsync = require('../utils/catchAsync');
 const { paginate, getPaginationMeta } = require('../utils/pagination');
+const OrderService = require('../services/OrderService');
+const PaymentService = require('../services/PaymentService');
 
 const ORDER_STATUSES = ['pending', 'processing', 'completed', 'cancelled'];
 const ADMIN_UPDATABLE_STATUSES = ['processing', 'completed', 'cancelled'];
@@ -15,7 +17,14 @@ const buildOrderItemsMap = async (orderIds) => {
   }
 
   const orderItems = await OrderItem.find({ order: { $in: orderIds } })
-    .populate('product', 'name slug images price discount stock')
+    .populate({
+      path: 'product',
+      select: 'name slug images price discount stock category',
+      populate: {
+        path: 'category',
+        select: 'name'
+      }
+    })
     .lean();
 
   return orderItems.reduce((acc, item) => {
@@ -222,7 +231,52 @@ const updateOrderStatus = catchAsync(async (req, res) => {
   );
 });
 
+/**
+ * Tạo đơn hàng mới từ giỏ hàng (user)
+ * POST /api/orders
+ */
+const createOrder = catchAsync(async (req, res) => {
+  const { shippingAddress, paymentMethod, couponCode, note } = req.body;
+  const { order } = await OrderService.createFromCart(req.user._id, {
+    shippingAddress,
+    paymentMethod,
+    couponCode,
+    note
+  });
+
+  let paymentIntent = null;
+  if (String(paymentMethod).toUpperCase() !== 'COD') {
+    const intent = await PaymentService.createIntentForOrder({ orderId: order._id, method: paymentMethod });
+    paymentIntent = intent.paymentIntent;
+  }
+
+  res.status(201).json(
+    ApiResponse.created(
+      { order, paymentIntent },
+      'Order created successfully'
+    )
+  );
+});
+
+/**
+ * Hủy đơn hàng (user)
+ * PATCH /api/orders/:id/cancel
+ */
+const cancelOrder = catchAsync(async (req, res) => {
+  const { id } = req.params;
+  const { order } = await OrderService.cancelOrder(req.user._id, id, req.body.reason || '');
+  
+  res.status(200).json(
+    ApiResponse.success(
+      { order },
+      'Order cancelled successfully'
+    )
+  );
+});
+
 module.exports = {
+  createOrder,
+  cancelOrder,
   getMyOrders,
   getOrderById,
   getAdminOrders,

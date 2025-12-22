@@ -7,6 +7,7 @@ const upload = require('../config/multer');
 // Import với error handling
 let uploadController;
 let protect;
+let isAdmin;
 
 try {
   uploadController = require('../controllers/upload.controller');
@@ -18,7 +19,9 @@ try {
 
 try {
   const authMiddleware = require('../middlewares/auth.middleware');
+  const roleMiddleware = require('../middlewares/role.middleware');
   protect = authMiddleware.protect;
+  isAdmin = roleMiddleware.isAdmin;
   console.log('✓ Upload middlewares loaded');
 } catch (error) {
   console.error('✗ Error loading middlewares:', error);
@@ -35,6 +38,17 @@ router.post(
   protect,
   upload.array('images', 10), // Tối đa 10 ảnh, field name: 'images'
   uploadController.uploadImages
+);
+
+/**
+ * Upload ảnh danh mục
+ */
+router.post(
+  '/categories',
+  protect,
+  isAdmin,
+  upload.single('image'),
+  uploadController.uploadCategoryImage
 );
 
 /**

@@ -33,8 +33,8 @@ const createReviewValidator = [
     .trim()
     .notEmpty()
     .withMessage('Comment is required')
-    .isLength({ min: 10, max: 1000 })
-    .withMessage('Comment must be between 10 and 1000 characters'),
+    .isLength({ min: 3, max: 1000 })
+    .withMessage('Comment must be between 3 and 1000 characters'),
   body('images')
     .optional()
     .isArray()
@@ -58,8 +58,8 @@ const updateReviewValidator = [
   body('comment')
     .optional()
     .trim()
-    .isLength({ min: 10, max: 1000 })
-    .withMessage('Comment must be between 10 and 1000 characters'),
+    .isLength({ min: 3, max: 1000 })
+    .withMessage('Comment must be between 3 and 1000 characters'),
   body('images')
     .optional()
     .isArray()

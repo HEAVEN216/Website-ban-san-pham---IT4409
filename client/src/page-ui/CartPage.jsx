@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./CartPage.css";
 import { useNavigate } from "react-router-dom";
+import { emitCartUpdated } from "../utils/cartEvents";
 
 export default function CartPage() {
   const [cart, setCart] = useState([]);
@@ -17,6 +18,8 @@ export default function CartPage() {
   const updateCart = (newCart) => {
     setCart(newCart);
     localStorage.setItem("cart", JSON.stringify(newCart));
+    const totalItems = newCart.reduce((sum, item) => sum + (item.quantity || 0), 0);
+    emitCartUpdated({ totalItems });
   };
 
   const increaseQty = (id) => {
@@ -25,7 +28,6 @@ export default function CartPage() {
         item.id === id ? { ...item, quantity: item.quantity + 1 } : item
       )
     );
-    window.dispatchEvent(new Event("cartUpdated"));
   };
 
   const decreaseQty = (id) => {
@@ -36,12 +38,10 @@ export default function CartPage() {
           : item
       )
     );
-    window.dispatchEvent(new Event("cartUpdated"));
   };
 
   const removeItem = (id) => {
     updateCart(cart.filter((item) => item.id !== id));
-    window.dispatchEvent(new Event("cartUpdated"));
   };
 
   const totalPrice = cart.reduce(

@@ -17,16 +17,18 @@ const registerValidator = [
     .isLength({ min: 2, max: 100 })
     .withMessage('Full name must be between 2 and 100 characters'),
   body('phone')
-    .optional()
+    .optional({ checkFalsy: true })
     .isMobilePhone('vi-VN')
     .withMessage('Please provide a valid Vietnamese phone number')
 ];
 
 const loginValidator = [
   body('email')
-    .isEmail()
-    .withMessage('Please provide a valid email')
-    .normalizeEmail(),
+    .trim()
+    .notEmpty()
+    .withMessage('Email or username is required')
+    .isLength({ min: 1, max: 100 })
+    .withMessage('Email or username must be between 1 and 100 characters'),
   body('password')
     .notEmpty()
     .withMessage('Password is required')

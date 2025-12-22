@@ -1,29 +1,64 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Sector } from 'recharts';
 import { Download, Eye, Trash2 } from 'lucide-react';
 import Papa from 'papaparse';
+import { orderService, categoryService } from '../services';
 
-// ------------------------- Mock Data -------------------------
-const mockOrders = [
-  { id: 'ORD-1001', customerName: 'Nguyen Van A', date: '2025-10-16T10:24:00+07:00', channel: 'Online', status: 'Completed', items: [ { name: 'Tai nghe X', category: 'Electronics', qty: 1, unitPrice: 1200000 }, { name: 'Cap sac', category: 'Electronics', qty: 2, unitPrice: 80000 } ], amount: 1360000 },
-  { id: 'ORD-1002', customerName: 'Tran Thi B', date: '2025-10-18T14:12:00+07:00', channel: 'Store', status: 'Completed', items: [ { name: 'Ao polo', category: 'Apparel', qty: 2, unitPrice: 350000 } ], amount: 700000 },
-  { id: 'ORD-1003', customerName: 'Le Van C', date: '2025-10-20T09:05:00+07:00', channel: 'Online', status: 'Pending', items: [ { name: 'Den ban', category: 'Home', qty: 1, unitPrice: 450000 } ], amount: 450000 },
-  { id: 'ORD-1004', customerName: 'Pham Thi D', date: '2025-10-22T19:40:00+07:00', channel: 'Online', status: 'Completed', items: [ { name: 'Loa mini', category: 'Electronics', qty: 1, unitPrice: 550000 } ], amount: 550000 },
-  { id: 'ORD-1005', customerName: 'Hoang Van E', date: '2025-10-24T11:11:00+07:00', channel: 'Store', status: 'Refunded', items: [ { name: 'Quan jeans', category: 'Apparel', qty: 1, unitPrice: 420000 } ], amount: 420000 },
-  { id: 'ORD-1006', customerName: 'Ngo Thi F', date: '2025-10-26T16:00:00+07:00', channel: 'Online', status: 'Completed', items: [ { name: 'Gia do', category: 'Home', qty: 3, unitPrice: 150000 } ], amount: 450000 },
-  { id: 'ORD-1007', customerName: 'Bui Van G', date: '2025-10-28T08:30:00+07:00', channel: 'Online', status: 'Completed', items: [ { name: 'Keyboard', category: 'Electronics', qty: 1, unitPrice: 900000 } ], amount: 900000 },
-  { id: 'ORD-1008', customerName: 'Dang Thi H', date: '2025-10-29T13:15:00+07:00', channel: 'Store', status: 'Completed', items: [ { name: 'Vay', category: 'Apparel', qty: 1, unitPrice: 600000 } ], amount: 600000 },
-  { id: 'ORD-1009', customerName: 'Vu Van I', date: '2025-11-01T09:45:00+07:00', channel: 'Online', status: 'Completed', items: [ { name: 'Den ngu', category: 'Home', qty: 2, unitPrice: 220000 } ], amount: 440000 },
-  { id: 'ORD-1010', customerName: 'Le Thi K', date: '2025-11-03T17:20:00+07:00', channel: 'Online', status: 'Pending', items: [ { name: 'Suat an', category: 'Home', qty: 1, unitPrice: 120000 } ], amount: 120000 },
-  { id: 'ORD-1011', customerName: 'Tran Van L', date: '2025-11-06T12:00:00+07:00', channel: 'Store', status: 'Completed', items: [ { name: 'Ao khoac', category: 'Apparel', qty: 1, unitPrice: 850000 } ], amount: 850000 },
-  { id: 'ORD-1012', customerName: 'Pham Van M', date: '2025-11-10T15:30:00+07:00', channel: 'Online', status: 'Completed', items: [ { name: 'Sạc dự phòng', category: 'Electronics', qty : 1, unitPrice: 300000 }, { name: 'Earphone', category: 'Electronics', qty : 1, unitPrice: 300000 }], amount: 600000 },
+const COLOR_PALETTE = [
+  '#2563eb',
+  '#f97316',
+  '#10b981',
+  '#f43f5e',
+  '#a78bfa',
+  '#14b8a6',
+  '#f59e0b',
+  '#ec4899',
+  '#22c55e',
+  '#8b5cf6'
 ];
+
+const mergeCategoryOptions = (currentOptions, names = []) => {
+  if (!Array.isArray(names) || names.length === 0) {
+    return currentOptions;
+  }
+
+  const map = new Map(currentOptions.map(opt => [opt.value, opt]));
+  let changed = false;
+
+  names.forEach(name => {
+    if (!name) return;
+    if (!map.has(name)) {
+      map.set(name, { value: name, label: name });
+      changed = true;
+    }
+  });
+
+  if (!changed) {
+    return currentOptions;
+  }
+
+  return Array.from(map.values());
+};
 
 // ------------------------- Helpers -------------------------
 const currency = (v) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(v);
+
+const formatAxisTick = (value) => {
+  if (!value) return '0';
+  const abs = Math.abs(value);
+  const formatUnit = (num, suffix) => {
+    const formatted = (num).toFixed(1);
+    return `${formatted.endsWith('.0') ? formatted.slice(0, -2) : formatted}${suffix}`;
+  };
+
+  if (abs >= 1e9) return formatUnit(value / 1e9, 'B');
+  if (abs >= 1e6) return formatUnit(value / 1e6, 'M');
+  if (abs >= 1e3) return formatUnit(value / 1e3, 'K');
+  return value.toLocaleString('en-US');
+};
 
 const groupByDate = (orders) => {
   const map = {};
@@ -36,24 +71,100 @@ const groupByDate = (orders) => {
   return arr;
 };
 
-const breakdownByCategory = (orders) => {
+const breakdownByCategory = (orders, colorMap = {}) => {
   const map = {};
   orders.forEach(o => {
     o.items.forEach(it => {
       map[it.category] = (map[it.category] || 0) + it.qty * it.unitPrice;
-    })
-  })
-  return Object.keys(map).map(k => ({ name: k, value: map[k] }));
-}
+    });
+  });
+  return Object.keys(map)
+    .map(k => ({
+      name: k,
+      value: map[k],
+      color: colorMap[k]
+    }))
+    .sort((a, b) => b.value - a.value);
+};
 
 // ------------------------- Components -------------------------
 
+const startOfDay = (date) => {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
+
+const endOfDay = (date) => {
+  const d = new Date(date);
+  d.setHours(23, 59, 59, 999);
+  return d;
+};
+
+const calcPercentage = (current, previous) => {
+  if (!previous) {
+    return null;
+  }
+  return ((current - previous) / previous) * 100;
+};
+
+const formatChange = (value) => {
+  if (value === null) return '—';
+  const rounded = value.toFixed(1);
+  return `${value > 0 ? '+' : ''}${rounded}%`;
+};
+
+const changeColor = (value) => {
+  if (value === null) return 'text-gray-400';
+  if (value > 0) return 'text-green-500';
+  if (value < 0) return 'text-red-500';
+  return 'text-gray-400';
+};
+
 const RevenueKPI = ({orders}) => {
-  const today = new Date().toISOString().slice(0,10);
-  const revenueToday = orders.filter(o => o.date.slice(0,10) === today).reduce((s,a)=>s+a.amount,0);
-  const revenueMonth = orders.filter(o => new Date(o.date).getMonth() === new Date().getMonth() && new Date(o.date).getFullYear()===new Date().getFullYear()).reduce((s,a)=>s+a.amount,0);
+  const now = new Date();
+  const todayStart = startOfDay(now);
+  const yesterdayStart = new Date(todayStart);
+  yesterdayStart.setDate(yesterdayStart.getDate() - 1);
+  const yesterdayEnd = endOfDay(yesterdayStart);
+
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const prevMonthEnd = new Date(monthStart.getTime() - 1);
+
+  const sumRevenueBetween = (start, end) =>
+    orders
+      .filter(o => {
+        const date = new Date(o.date);
+        return date >= start && date <= end;
+      })
+      .reduce((sum, order) => sum + order.amount, 0);
+
+  const countOrdersBetween = (start, end) =>
+    orders.filter(o => {
+      const date = new Date(o.date);
+      return date >= start && date <= end;
+    }).length;
+
+  const revenueToday = sumRevenueBetween(todayStart, endOfDay(now));
+  const revenueYesterday = sumRevenueBetween(yesterdayStart, yesterdayEnd);
+  const revenueTodayChange = calcPercentage(revenueToday, revenueYesterday);
+
+  const revenueMonth = sumRevenueBetween(monthStart, now);
+  const revenuePrevMonth = sumRevenueBetween(prevMonthStart, prevMonthEnd);
+  const revenueMonthChange = calcPercentage(revenueMonth, revenuePrevMonth);
+
+  const ordersThisMonth = countOrdersBetween(monthStart, now);
+  const ordersPrevMonth = countOrdersBetween(prevMonthStart, prevMonthEnd);
+  const ordersChange = calcPercentage(ordersThisMonth, ordersPrevMonth);
+
   const ordersCount = orders.length;
-  const avgOrder = ordersCount ? Math.round(orders.reduce((s,a)=>s+a.amount,0)/ordersCount) : 0;
+  const totalRevenue = orders.reduce((sum, order) => sum + order.amount, 0);
+  const avgOrder = ordersCount ? Math.round(totalRevenue / ordersCount) : 0;
+
+  const prevAvgOrder =
+    ordersPrevMonth ? Math.round(revenuePrevMonth / ordersPrevMonth) : 0;
+  const avgChange = calcPercentage(avgOrder, prevAvgOrder);
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -63,7 +174,9 @@ const RevenueKPI = ({orders}) => {
             <div className="text-sm text-gray-500">Revenue Today</div>
             <div className="text-2xl text-black font-semibold">{currency(revenueToday)}</div>
           </div>
-          <div className="text-green-500 text-sm">+5%</div>
+          <div className={`${changeColor(revenueTodayChange)} text-sm`}>
+            {formatChange(revenueTodayChange)}
+          </div>
         </div>
         <div className="text-xs text-gray-400 mt-2">So sánh với hôm trước</div>
       </div>
@@ -74,7 +187,9 @@ const RevenueKPI = ({orders}) => {
             <div className="text-sm text-gray-500">Revenue This Month</div>
             <div className="text-2xl text-black font-semibold">{currency(revenueMonth)}</div>
           </div>
-          <div className="text-green-500 text-sm">+12%</div>
+          <div className={`${changeColor(revenueMonthChange)} text-sm`}>
+            {formatChange(revenueMonthChange)}
+          </div>
         </div>
         <div className="text-xs text-gray-400 mt-2">So sánh với kỳ trước</div>
       </div>
@@ -83,9 +198,11 @@ const RevenueKPI = ({orders}) => {
         <div className="flex justify-between items-start">
           <div>
             <div className="text-sm text-gray-500">Orders</div>
-            <div className="text-2xl text-black font-semibold">{ordersCount}</div>
+            <div className="text-2xl text-black font-semibold">{ordersThisMonth}</div>
           </div>
-          <div className="text-red-500 text-sm">-2%</div>
+          <div className={`${changeColor(ordersChange)} text-sm`}>
+            {formatChange(ordersChange)}
+          </div>
         </div>
         <div className="text-xs text-gray-400 mt-2">Trong tháng</div>
       </div>
@@ -96,7 +213,9 @@ const RevenueKPI = ({orders}) => {
             <div className="text-sm text-gray-500">Avg Order Value</div>
             <div className="text-2xl text-black font-semibold">{currency(avgOrder)}</div>
           </div>
-          <div className="text-green-500 text-sm">+3%</div>
+          <div className={`${changeColor(avgChange)} text-sm`}>
+            {formatChange(avgChange)}
+          </div>
         </div>
         <div className="text-xs text-gray-400 mt-2">Giá trị trung bình</div>
       </div>
@@ -104,14 +223,16 @@ const RevenueKPI = ({orders}) => {
   )
 }
 
+const CHART_HEIGHT = 320;
+
 const RevenueChart = ({data}) => {
   return (
-    <div className="bg-white p-4 rounded-lg shadow-sm border h-64">
+    <div className="bg-white p-4 rounded-lg shadow-sm border" style={{ minHeight: CHART_HEIGHT }}>
       <h3 className="text-lg text-black font-semibold mb-2">Doanh thu theo ngày</h3>
-      <ResponsiveContainer width="100%" height="85%">
+      <ResponsiveContainer width="100%" height={CHART_HEIGHT - 80}>
         <LineChart data={data}>
           <XAxis dataKey="date" />
-          <YAxis />
+          <YAxis tickFormatter={formatAxisTick} />
           <Tooltip formatter={(v)=>currency(v)} />
           <Line type="monotone" dataKey="revenue" stroke="#2563eb" strokeWidth={2} dot={false} />
         </LineChart>
@@ -120,26 +241,101 @@ const RevenueChart = ({data}) => {
   )
 }
 
-const RevenueBreakdown = ({data}) => {
-  const COLORS = ['#60a5fa','#f97316','#34d399','#f43f5e','#a78bfa'];
+const formatNumber = (value) =>
+  new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(Math.round(value || 0));
+
+const RevenueBreakdown = ({data, colorMap = {}}) => {
+  const [activeIndex, setActiveIndex] = useState(null);
+  const getColor = (name, index) => colorMap[name] || COLOR_PALETTE[index % COLOR_PALETTE.length];
+  const defaultData = data[0] || { name: '—', value: 0 };
+  const activeData =
+    Number.isInteger(activeIndex) && data[activeIndex]
+      ? data[activeIndex]
+      : defaultData;
+
+  const handleSliceEnter = (_, index) => setActiveIndex(index);
+  const handleSliceLeave = () => setActiveIndex(null);
+
+  const customTooltip = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+      const dataPoint = payload[0];
+      return (
+        <div className="bg-white shadow-lg border border-gray-200 px-3 py-2 rounded text-sm">
+          <div className="font-semibold text-gray-900">{dataPoint.name}</div>
+          <div className="text-blue-600 font-bold">{formatNumber(dataPoint.value)} VND</div>
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
-    <div className="bg-white p-4 rounded-lg shadow-sm border h-64">
+    <div className="bg-white p-4 rounded-lg shadow-sm border" style={{ minHeight: CHART_HEIGHT }}>
       <h3 className="text-lg text-black font-semibold mb-2">Phân bổ theo danh mục</h3>
-      <ResponsiveContainer width="100%" height="85%">
-        <PieChart>
-          <Pie data={data}
-               dataKey="value"
-               nameKey="name"
-               cx="50%"
-               cy="50%"
-               outerRadius={70}
-               label/>
+      <div
+        className="relative"
+        style={{ height: CHART_HEIGHT - 60 }}
+        onMouseLeave={handleSliceLeave}
+      >
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart margin={{ top: 10, right: 20, bottom: 10, left: 20 }}>
+            <Tooltip content={customTooltip} />
+            <Pie
+              data={data}
+              dataKey="value"
+              nameKey="name"
+              cx="50%"
+              cy="50%"
+              outerRadius={95}
+              innerRadius={55}
+              paddingAngle={2}
+              activeIndex={Number.isInteger(activeIndex) ? activeIndex : -1}
+              activeShape={(props) => (
+                <Sector {...props} outerRadius={props.outerRadius + 8} />
+              )}
+              onMouseEnter={handleSliceEnter}
+              onMouseLeave={handleSliceLeave}
+            >
+              {data.map((entry, index) => (
+                <Cell
+                  key={`cell-${entry.name}-${index}`}
+                  fill={getColor(entry.name, index)}
+                  opacity={activeIndex === index ? 1 : 0.55}
+                />
+              ))}
+            </Pie>
+          </PieChart>
+        </ResponsiveContainer>
+
+        {data.length > 0 && (
+          <div
+            className={`absolute inset-0 flex flex-col items-center justify-center pointer-events-none transition-opacity duration-200 ${
+              Number.isInteger(activeIndex) ? 'opacity-0' : 'opacity-100'
+            }`}
+          >
+            <div className="text-sm text-gray-500">Danh mục</div>
+            <div className="text-lg font-semibold text-gray-900 mt-1">
+              {activeData.name}
+            </div>
+            <div className="text-base font-bold text-blue-600">
+              {formatNumber(activeData.value)} đ
+            </div>
+          </div>
+        )}
+      </div>
+      {data.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-3 text-sm border-t pt-3">
           {data.map((entry, index) => (
-            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+            <div key={`legend-${entry.name}`} className="flex items-center gap-2 text-gray-700">
+              <span
+                className="inline-block w-3 h-3 rounded-full"
+                style={{ backgroundColor: getColor(entry.name, index) }}
+              ></span>
+              <span>{entry.name}</span>
+            </div>
           ))}
-          <Legend />
-        </PieChart>
-      </ResponsiveContainer>
+        </div>
+      )}
     </div>
   )
 }
@@ -156,7 +352,11 @@ const RevenueFilters = ({from, to, setFrom, setTo, categoryOptions, channelOptio
 
       <select className="border rounded px-2 py-1" value={filters.category} onChange={(e)=>setFilters(f=>({...f, category: e.target.value}))}>
         <option value="">All Categories</option>
-        {categoryOptions.map(c => <option key={c} value={c}>{c}</option>)}
+        {categoryOptions.map(opt => (
+          <option key={opt.value} value={opt.value}>
+            {opt.label}
+          </option>
+        ))}
       </select>
 
       <select className="border rounded px-2 py-1" value={filters.channel} onChange={(e)=>setFilters(f=>({...f, channel: e.target.value}))}>
@@ -306,26 +506,92 @@ const OrderModal = ({order, onClose, onDelete}) => {
 
 // ------------------------- Main Component -------------------------
 
+const normalizeDate = (date, endOfDay = false) => {
+  if (!date) return null;
+  const clone = new Date(date);
+  if (Number.isNaN(clone.getTime())) return null;
+  if (endOfDay) {
+    clone.setHours(23, 59, 59, 999);
+  } else {
+    clone.setHours(0, 0, 0, 0);
+  }
+  return clone;
+};
+
 export default function Income(){
-  const [orders, setOrders] = useState(mockOrders);
+  const [orders, setOrders] = useState([]);
   const [from, setFrom] = useState(() => { const d = new Date(); d.setDate(d.getDate()-30); return d; });
   const [to, setTo] = useState(new Date());
   const [filters, setFilters] = useState({ category: '', channel: '', q: '' });
+  const [categoryOptions, setCategoryOptions] = useState([{ value: '', label: 'All Categories' }]);
   const [selectedOrder, setSelectedOrder] = useState(null);
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  useEffect(()=>{
-    // simulate load when range changes
-    setLoading(true);
-    const t = setTimeout(()=> setLoading(false), 300);
-    return ()=>clearTimeout(t);
-  },[from,to,filters]);
+  const startOfRange = useMemo(() => normalizeDate(from, false), [from]);
+  const endOfRange = useMemo(() => normalizeDate(to, true), [to]);
+
+  // Fetch orders from API
+  const fetchOrders = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const params = {
+        limit: 100,
+        status: 'completed',
+        startDate: startOfRange ? startOfRange.toISOString() : undefined,
+        endDate: endOfRange ? endOfRange.toISOString() : undefined
+      };
+
+      const response = await orderService.getAdminOrders(params);
+      
+      if (response.success && response.data?.orders) {
+        // Transform API data to match component format
+        const transformedOrders = response.data.orders.map(order => ({
+          id: order.orderNumber || order._id,
+          _id: order._id,
+          customerName: order.user?.fullName || 'Khách hàng',
+          date: order.createdAt,
+          channel: order.paymentMethod === 'COD' ? 'COD' : 'Online',
+          status: order.orderStatus ? order.orderStatus.charAt(0).toUpperCase() + order.orderStatus.slice(1) : 'Pending',
+          paymentStatus: order.paymentStatus,
+          items: (order.items || []).map(item => ({
+            name: item.product?.name || 'Sản phẩm',
+            category: item.product?.category?.name || 'Chưa phân loại',
+            qty: item.quantity,
+            unitPrice: item.price
+          })),
+          amount: order.totalAmount || 0
+        }));
+
+        const completedOrders = transformedOrders.filter(
+          (order) => (order.status || '').toLowerCase() === 'completed'
+        );
+
+        setOrders(completedOrders);
+      } else {
+        setOrders([]);
+      }
+    } catch (err) {
+      console.error('Error fetching orders:', err);
+      console.error('Error details:', err.response?.data || err.message);
+      setError('Không thể tải dữ liệu đơn hàng: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setLoading(false);
+    }
+  }, [startOfRange, endOfRange]);
+
+  useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
 
   const filtered = useMemo(()=>{
     return orders.filter(o=>{
       const d = new Date(o.date);
-      if(d < new Date(from.setHours(0,0,0,0)) || d > new Date(to.setHours(23,59,59,999))) return false;
+      if(startOfRange && d < startOfRange) return false;
+      if(endOfRange && d > endOfRange) return false;
       if(filters.category){
         const cats = o.items.map(i=>i.category);
         if(!cats.includes(filters.category)) return false;
@@ -337,18 +603,48 @@ export default function Income(){
       }
       return true;
     })
-  },[orders, from, to, filters]);
+  },[orders, startOfRange, endOfRange, filters]);
 
   const chartData = useMemo(()=> groupByDate(filtered), [filtered]);
-  const breakdown = useMemo(()=> breakdownByCategory(filtered), [filtered]);
-
-  const categoryOptions = useMemo(()=>{
-    const s = new Set();
-    orders.forEach(o=> o.items.forEach(it=> s.add(it.category)));
-    return Array.from(s);
-  },[orders]);
 
   const channelOptions = useMemo(()=> Array.from(new Set(orders.map(o=>o.channel))), [orders]);
+
+  const categoryColorMap = useMemo(() => {
+    const map = {};
+    categoryOptions.forEach((opt, index) => {
+      if (!opt.value) return;
+      map[opt.value] = COLOR_PALETTE[index % COLOR_PALETTE.length];
+    });
+    return map;
+  }, [categoryOptions]);
+
+  const breakdown = useMemo(()=> breakdownByCategory(filtered, categoryColorMap), [filtered, categoryColorMap]);
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const response = await categoryService.getCategories();
+        if (response.success) {
+          const names = (response.data?.categories || [])
+            .map(cat => cat.name)
+            .filter(Boolean);
+          setCategoryOptions(prev => mergeCategoryOptions(prev, names));
+        }
+      } catch (err) {
+        console.error('Error fetching categories:', err);
+      }
+    };
+    loadCategories();
+  }, []);
+
+  useEffect(() => {
+    const names = Array.from(
+      new Set(
+        orders.flatMap(order => (order.items || []).map(item => item.category).filter(Boolean))
+      )
+    );
+    setCategoryOptions(prev => mergeCategoryOptions(prev, names));
+  }, [orders]);
 
   const handleExportCSV = () => {
     const data = filtered.map(o=> ({ id: o.id, customer: o.customerName, date: o.date, channel: o.channel, status: o.status, amount: o.amount }));
@@ -371,11 +667,22 @@ export default function Income(){
     setSelectedOrder(null);
   }
 
+  if (error) {
+    return (
+      <div className="p-8">
+        <h2 className="text-2xl font-semibold mb-4 text-gray-700">Thống kê doanh thu</h2>
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          {error}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-8">
       <h2 className="text-2xl font-semibold mb-4 text-gray-700">Thống kê doanh thu</h2>
 
-      <RevenueKPI orders={orders} />
+      <RevenueKPI orders={filtered} />
 
       <RevenueFilters from={from} to={to} setFrom={setFrom} setTo={setTo} categoryOptions={categoryOptions} channelOptions={channelOptions} filters={filters} setFilters={setFilters} onExportCSV={handleExportCSV} />
 
@@ -392,12 +699,12 @@ export default function Income(){
           {loading ? (
             <div className="bg-white p-6 rounded shadow-sm border h-64 flex items-center justify-center">Loading breakdown...</div>
           ) : (
-            <RevenueBreakdown data={breakdown} />
+            <RevenueBreakdown data={breakdown} colorMap={categoryColorMap} />
           )}
         </div>
       </div>
 
-      <RevenueTable orders={filtered} onView={handleView} onDelete={(o)=>{ if(window.confirm('Xác nhận xóa review?')) { setOrders(prev=> prev.filter(p=>p.id!==o.id)) } }} />
+      <RevenueTable orders={filtered} onView={handleView} onDelete={(o)=>{ if(window.confirm('Xác nhận xóa đơn hàng này?')) { setOrders(prev=> prev.filter(p=>p.id!==o.id)) } }} />
 
       {selectedOrder && <OrderModal order={selectedOrder} onClose={handleCloseModal} onDelete={handleDelete} />}
     </div>

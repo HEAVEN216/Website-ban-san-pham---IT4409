@@ -1,24 +1,32 @@
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
-import { Home, Package, Users, Shield, Settings, LogOut, Menu , DollarSign , Car , Star} from "lucide-react";
+import { Home, Package, Users, DollarSign, Car, Star } from "lucide-react";
 import { Button } from "./ui/Button";
 
 const Sidebar = () => {
   const menuItems = [
-    { name: "Dashboard", icon: <Home size={18} />, path: "/" },
-    { name: "Danh mục", icon: <Package size={18} />, path: "/categories" },
-    { name: "Sản phẩm", icon: <Package size={18} />, path: "/products" },
-    { name: "Người dùng", icon: <Users size={18} />, path: "/users" },
-    { name: "Quản trị viên", icon: <Shield size={18} />, path: "/admins" },
-    { name: "Đơn hàng", icon: <Car size={18} />, path: "/carts" },
-    { name: "Đánh giá", icon: <Star size={18} />, path: "/reviews" },
-    { name: "Thống kê doanh thu", icon: <DollarSign size={18} />, path: "/income" },
-    { name: "Cài đặt", icon: <Settings size={18} />, path: "/settings" },
+    { name: "Dashboard", icon: <Home size={18} />, path: "/admin" },
+    { name: "Danh mục", icon: <Package size={18} />, path: "/admin/categories" },
+    { name: "Sản phẩm", icon: <Package size={18} />, path: "/admin/products" },
+    { name: "Người dùng", icon: <Users size={18} />, path: "/admin/users" },
+    { name: "Đơn hàng", icon: <Car size={18} />, path: "/admin/orders" },
+    { name: "Đánh giá", icon: <Star size={18} />, path: "/admin/reviews" },
+    { name: "Thống kê doanh thu", icon: <DollarSign size={18} />, path: "/admin/income" },
   ];
 
   return (
     <div className="bg-white border-r border-gray-200 h-screen w-64 p-6 hidden md:flex flex-col justify-between">
       <div>
-        <h1 className="text-2xl font-bold text-blue-600 mb-10">TechStore Admin</h1>
+        <div className="flex items-center gap-2 mb-10">
+          <img
+            src={`${import.meta.env.BASE_URL}logo.svg`}
+            alt="TechStore"
+            className="w-8 h-8"
+            onError={(e) => {
+              e.currentTarget.style.display = 'none';
+            }}
+          />
+          <h1 className="text-2xl font-bold text-blue-600">TechStore Admin</h1>
+        </div>
         <ul className="space-y-4">
           {menuItems.map((item, index) => (
             <li key={index}>
@@ -33,9 +41,15 @@ const Sidebar = () => {
           ))}
         </ul>
       </div>
-      <Button variant="outline" className="flex items-center gap-2 text-gray-600 hover:text-red-500">
-        <LogOut size={16} /> Đăng xuất
-      </Button>
+      <div className="pt-4 border-t border-gray-200">
+        <Link
+          to="/"
+          className="flex items-center space-x-3 p-2 rounded-xl hover:bg-gray-100 text-gray-600 transition"
+        >
+          <Home size={16} />
+          <span className="text-sm">Về trang chủ</span>
+        </Link>
+      </div>
     </div>
   );
 };

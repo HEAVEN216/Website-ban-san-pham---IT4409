@@ -2,46 +2,10 @@
 
 const express = require('express');
 const router = express.Router();
-
-let orderController;
-let ordersController;
-let orderValidator;
-let validate;
-let protect;
-
-try {
-  orderController = require('../controllers/order.controller');
-  console.log('✓ Order controller loaded');
-} catch (error) {
-  console.error('✗ Error loading order controller:', error);
-  throw error;
-}
-
-try {
-  ordersController = require('../controllers/orders.controller');
-  console.log('✓ Orders (create/cancel) controller loaded');
-} catch (error) {
-  console.error('✗ Error loading orders controller:', error);
-  throw error;
-}
-
-try {
-  orderValidator = require('../validators/order.validator');
-  console.log('✓ Order validators loaded');
-} catch (error) {
-  console.error('✗ Error loading order validators:', error);
-  throw error;
-}
-
-try {
-  validate = require('../middlewares/validate.middleware');
-  const authMiddleware = require('../middlewares/auth.middleware');
-  protect = authMiddleware.protect;
-  console.log('✓ Order middlewares loaded');
-} catch (error) {
-  console.error('✗ Error loading order middlewares:', error);
-  throw error;
-}
+const orderController = require('../controllers/order.controller');
+const orderValidator = require('../validators/order.validator');
+const validate = require('../middlewares/validate.middleware');
+const { protect } = require('../middlewares/auth.middleware');
 
 /**
  * @route   POST /api/orders
@@ -51,7 +15,7 @@ try {
 router.post(
   '/',
   protect,
-  ordersController.createOrder
+  orderController.createOrder
 );
 
 /**
@@ -88,7 +52,7 @@ router.get(
 router.patch(
   '/:id/cancel',
   protect,
-  ordersController.cancelOrder
+  orderController.cancelOrder
 );
 
 module.exports = router;

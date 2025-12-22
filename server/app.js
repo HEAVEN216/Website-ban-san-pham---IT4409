@@ -6,6 +6,7 @@ const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
+const path = require('path');
 const connectDB = require('./config/db');
 const { errorHandler, notFound } = require('./middlewares/error.middleware');
 
@@ -102,6 +103,8 @@ try {
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+app.set('trust proxy', 1);
+
 app.use(cors({
     origin: process.env.CORS_ORIGIN,
     credentials: true
@@ -120,6 +123,8 @@ if (process.env.NODE_ENV !== 'production') {
         next();
     });
 }
+
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Health check
 app.get('/health', (req, res) => {

@@ -126,8 +126,8 @@ const addAddressValidator = [
       .withMessage('Limit must be between 1 and 100'),
     query('role')
       .optional()
-      .isIn(['customer', 'staff', 'admin'])
-      .withMessage('Role must be one of: customer, staff, admin'),
+      .isIn(['customer', 'admin'])
+      .withMessage('Role must be one of: customer, admin'),
     query('isDeleted')
       .optional()
       .isIn(['true', 'false'])
@@ -147,8 +147,8 @@ const addAddressValidator = [
       .withMessage('Invalid user ID'),
     body('role')
       .optional()
-      .isIn(['customer', 'staff', 'admin'])
-      .withMessage('Role must be one of: customer, staff, admin'),
+      .isIn(['customer', 'admin'])
+      .withMessage('Role must be one of: customer, admin'),
     body('isDeleted')
       .optional()
       .isBoolean()

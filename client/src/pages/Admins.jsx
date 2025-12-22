@@ -9,7 +9,7 @@ const initialData = [
 const Admins = () => {
   const [categories, setCategories] = useState(initialData);
   const [search, setSearch] = useState("");
-  const [form, setForm] = useState({ id: null, name: "", description: "" });
+  const [form, setForm] = useState({ id: null, username: "", password: "", adminrealname: "", civilcode: "" });
   const [isEditing, setIsEditing] = useState(false);
   const [error, setError] = useState("");
 
@@ -24,8 +24,12 @@ const Admins = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     setError("");
-    if (!form.name.trim()) {
-      setError("Tên danh mục không được để trống.");
+    if (!form.username.trim()) {
+      setError("Admin Usercode không được để trống.");
+      return;
+    }
+    if (!form.password.trim()) {
+      setError("Password không được để trống.");
       return;
     }
 
@@ -35,12 +39,18 @@ const Admins = () => {
     } else {
       setCategories((prev) => [
         ...prev,
-        { id: nextId, name: form.name.trim(), description: form.description.trim() },
+        { 
+          id: nextId, 
+          username: form.username.trim(), 
+          password: form.password.trim(),
+          adminrealname: form.adminrealname.trim(),
+          civilcode: form.civilcode.trim()
+        },
       ]);
       setNextId((id) => id + 1);
     }
 
-    setForm({ id: null, name: "", description: "" });
+    setForm({ id: null, username: "", password: "", adminrealname: "", civilcode: "" });
   };
 
   const handleEdit = (cat) => {
@@ -53,7 +63,7 @@ const Admins = () => {
   const handleDelete = (id) => {
     const cat = categories.find((c) => c.id === id);
     if (!cat) return;
-    if (window.confirm(`Xóa danh mục "${cat.name}"? Hành động không thể hoàn tác.`)) {
+    if (window.confirm(`Xóa admin "${cat.username}"? Hành động không thể hoàn tác.`)) {
       setCategories((prev) => prev.filter((c) => c.id !== id));
     }
   };
@@ -80,8 +90,8 @@ const Admins = () => {
               <label className="block text-sm font-medium text-gray-700 mb-2">Admin Usercode</label>
               <input
                 type="text"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                value={form.username}
+                onChange={(e) => setForm({ ...form, username: e.target.value })}
                 placeholder="Ví dụ: admin001"
                 className="w-full bg-white border border-gray-200 text-black rounded-md px-4 py-3 placeholder:text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
                 aria-label="Admin Usercode"
@@ -91,9 +101,9 @@ const Admins = () => {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
               <input
-                type="text"
-                value={form.description}
-                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                type="password"
+                value={form.password}
+                onChange={(e) => setForm({ ...form, password: e.target.value })}
                 placeholder="Set password here"
                 className="w-full bg-white border border-gray-200 text-black rounded-md px-4 py-3 placeholder:text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
                 aria-label="Password"
@@ -104,8 +114,8 @@ const Admins = () => {
               <label className="block text-sm font-medium text-gray-700 mb-2">Admin Real Name</label>
               <input
                 type="text"
-                value={form.description}
-                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                value={form.adminrealname}
+                onChange={(e) => setForm({ ...form, adminrealname: e.target.value })}
                 placeholder="Enter real name here"
                 className="w-full bg-white border border-gray-200 text-black rounded-md px-4 py-3 placeholder:text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
                 aria-label="Real Name"
@@ -116,8 +126,8 @@ const Admins = () => {
               <label className="block text-sm font-medium text-gray-700 mb-2">Admin civilcode</label>
               <input
                 type="text"
-                value={form.description}
-                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                value={form.civilcode}
+                onChange={(e) => setForm({ ...form, civilcode: e.target.value })}
                 placeholder="Enter admin civilcode here"
                 className="w-full bg-white border border-gray-200 text-black rounded-md px-4 py-3 placeholder:text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
                 aria-label="Civilcode"
@@ -138,7 +148,7 @@ const Admins = () => {
                   <button
                     type="button"
                     onClick={() => {
-                      setForm({ id: null, name: "", description: "" });
+                      setForm({ id: null, username: "", password: "", adminrealname: "", civilcode: "" });
                       setIsEditing(false);
                       setError("");
                     }}

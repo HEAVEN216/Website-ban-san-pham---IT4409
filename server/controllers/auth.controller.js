@@ -120,9 +120,17 @@ const register = catchAsync(async (req, res, next) => {
  * POST /api/auth/login
  */
 const login = catchAsync(async (req, res, next) => {
-  const { email, password } = req.body;
+  const { email: loginInput, password } = req.body;
+  const identifier = (loginInput || '').trim();
 
-  const user = await User.findOne({ email }).select('+password');
+  const lookupQuery = {
+    $or: [
+      { email: identifier.toLowerCase() },
+      { username: identifier }
+    ]
+  };
+
+  const user = await User.findOne(lookupQuery).select('+password');
 
   if (!user) {
     throw ApiError.unauthorized('Invalid email or password');

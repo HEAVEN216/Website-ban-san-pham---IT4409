@@ -1,12 +1,18 @@
 'use strict';
 
 const PaymentService = require('../services/PaymentService');
+const ApiResponse = require('../utils/ApiResponse');
 
 const createIntent = async (req, res, next) => {
   try {
     const { orderId, method } = req.body;
     const result = await PaymentService.createIntentForOrder({ orderId, method });
-    res.status(201).json(result.paymentIntent);
+    res.status(201).json(
+      ApiResponse.created(
+        result.paymentIntent,
+        'Payment intent created'
+      )
+    );
   } catch (err) {
     next(err);
   }
@@ -22,22 +28,19 @@ const webhook = async (req, res, next) => {
   }
 };
 
-const vnpayReturn = async (req, res, next) => {
+const payosReturn = async (req, res, next) => {
   try {
-    const result = await PaymentService.handleReturn('vnpay', req.query);
-    res.json({ success: result.success, orderId: result.orderId });
+    const result = await PaymentService.handleReturn('payos', req.query);
+    const baseUrl = process.env.CLIENT_APP_URL || 'http://localhost:5173';
+    const target = new URL('/payment-result', baseUrl);
+    target.searchParams.set('provider', 'payos');
+    target.searchParams.set('success', result.success ? 'true' : 'false');
+    if (result.orderId) target.searchParams.set('orderId', result.orderId);
+
+    res.redirect(target.toString());
   } catch (err) {
     next(err);
   }
 };
 
-const momoReturn = async (req, res, next) => {
-  try {
-    const result = await PaymentService.handleReturn('momo', req.query);
-    res.json({ success: result.success, orderId: result.orderId });
-  } catch (err) {
-    next(err);
-  }
-};
-
-module.exports = { createIntent, webhook, vnpayReturn, momoReturn };
+module.exports = { createIntent, webhook, payosReturn };
