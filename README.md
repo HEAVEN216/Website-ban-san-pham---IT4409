@@ -90,26 +90,7 @@ npm run seed:clear # xóa toàn bộ data mẫu
 
 ---
 
-## 5. Scripts quan trọng
+## 5. Deploy
+`https://website-ban-san-pham-it4-24559.web.app/`
 
-### Root (frontend)
 
-- `npm run dev`    – Chạy Vite dev server
-- `npm run build`  – Build production
-- `npm run preview` – Preview build
-- `npm run lint`   – Chạy ESLint
-
-### Server (backend)
-
-- `npm run dev`       – Chạy backend với `nodemon`
-- `npm start`         – Chạy backend bằng `node app.js`
-- `npm run seed`      – Seed dữ liệu mẫu
-- `npm run seed:clear` – Xóa dữ liệu mẫu
-
----
-
-## 6. Ghi chú
-
-- Frontend hiện đang dùng nhiều dữ liệu mock (products, dashboard stats, v.v.).
-- Backend đã có cấu trúc models, services, routes cho các phần chính (auth, products, orders, payments, ...), nhưng một số API có thể đang ở dạng **mock / skeleton** và sẽ được tích hợp dần.
-- Khi làm việc nhóm, nên checkout branch `develop`, chạy theo đúng các bước trên, test OK rồi mới merge vào `main`.
